@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -28,5 +29,5 @@ func main() {
 		return c.SendString("Hello, World!")
 	})
 
-	app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT")))
+	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }
