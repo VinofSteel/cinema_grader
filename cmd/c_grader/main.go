@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"github.com/VinOfSteel/cinemagrader/initializers"
+)
 
 func main() {
-	fmt.Println("Is it working?")
+	// Initializing environment variables
+	initializers.InitializeEnv()
 }
