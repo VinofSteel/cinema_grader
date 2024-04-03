@@ -11,13 +11,15 @@ import (
 )
 
 func main() {
-	// Initializing environment variables
+	// Calling initializers 
 	initializers.InitializeEnv()
+	db := initializers.InitializeDB()
+	defer db.Close()
 
 	// Starting fiber
 	fiberConfig := fiber.Config{
 		AppName: "Cinema Grader",
-		Prefork: true,
+		Prefork: false,
 		CaseSensitive: true,
 		ReadTimeout: 30 * time.Second,
 		WriteTimeout: 90 * time.Second,
@@ -25,6 +27,7 @@ func main() {
 	}
 	app := fiber.New(fiberConfig)
 
+	// Routes
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
 	})
