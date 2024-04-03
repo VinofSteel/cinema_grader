@@ -11,19 +11,19 @@ import (
 )
 
 func main() {
-	// Calling initializers 
+	// Calling initializers
 	initializers.InitializeEnv()
 	db := initializers.InitializeDB()
 	defer db.Close()
 
 	// Starting fiber
 	fiberConfig := fiber.Config{
-		AppName: "Cinema Grader",
-		Prefork: false,
+		AppName:       "Cinema Grader",
+		Prefork:       false,
 		CaseSensitive: true,
-		ReadTimeout: 30 * time.Second,
-		WriteTimeout: 90 * time.Second,
-		IdleTimeout: 120 * time.Second,
+		ReadTimeout:   30 * time.Second,
+		WriteTimeout:  90 * time.Second,
+		IdleTimeout:   120 * time.Second,
 	}
 	app := fiber.New(fiberConfig)
 

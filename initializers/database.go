@@ -9,13 +9,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func InitializeDB() *sql.DB  {
+func InitializeDB() *sql.DB {
 	var (
-		user = os.Getenv("PGUSER")
-		password = os.Getenv("PGPASSWORD")
-		host = os.Getenv("PGHOST")
-		port = os.Getenv("PGPORT")
-		dbName = os.Getenv("PGDATABASE")
+		user     string = os.Getenv("PGUSER")
+		password string = os.Getenv("PGPASSWORD")
+		host     string = os.Getenv("PGHOST")
+		port     string = os.Getenv("PGPORT")
+		dbName   string = os.Getenv("PGDATABASE")
 	)
 
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbName)
@@ -34,4 +34,13 @@ func InitializeDB() *sql.DB  {
 	log.Println("Connection opened succesfully!")
 
 	return db
+}
+
+func CreateTables(db *sql.DB) {
+	// Creating uuid extension on DB
+	extensionQuery := "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
+	_, err := db.Exec(extensionQuery)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
