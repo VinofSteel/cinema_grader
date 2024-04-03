@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/VinOfSteel/cinemagrader/models"
 	_ "github.com/lib/pq"
 )
 
@@ -32,15 +33,25 @@ func InitializeDB() *sql.DB {
 	}
 
 	log.Println("Connection opened succesfully!")
+	
+	// Executing table creation queries as soon as DB is opened
+	createTables(db)
 
 	return db
 }
 
-func CreateTables(db *sql.DB) {
+func createTables(db *sql.DB) {
 	// Creating uuid extension on DB
 	extensionQuery := "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
 	_, err := db.Exec(extensionQuery)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Creating application tables
+	for _, query := range models.Tables {
+		if _, err := db.Exec(query); err != nil {
+			log.Fatalf("Error creating tables: %v", err)
+		}
 	}
 }
