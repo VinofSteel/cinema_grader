@@ -8,7 +8,7 @@ const UsersTable string = `
 		name VARCHAR(50) NOT NULL,
 		surname VARCHAR(70),
 		email VARCHAR(100) NOT NULL UNIQUE,
-		password VARCHAR(20) NOT NULL,
+		password VARCHAR(200) NOT NULL,
 		birthday DATE,
 		is_adm BOOLEAN DEFAULT false,
 		created_at TIMESTAMP DEFAULT NOW(),
