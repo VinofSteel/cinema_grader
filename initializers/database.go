@@ -21,7 +21,7 @@ func InitializeDB() *sql.DB {
 
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbName)
 
-	log.Printf("Opening connection with database %s on port %s,,.\n", dbName, port)
+	log.Printf("Opening connection with database %s on port %s...\n", dbName, port)
 	db, err := sql.Open("postgres", connStr)
 
 	if err != nil {
@@ -43,13 +43,13 @@ func InitializeDB() *sql.DB {
 func createTables(db *sql.DB) {
 	// Creating uuid extension on DB
 	extensionQuery := "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
-	_, err := db.Exec(extensionQuery)
-	if err != nil {
-		log.Fatal(err)
+	if _, err := db.Exec(extensionQuery); err != nil {
+		log.Fatalf("Error creating uuid extension: %v", err)
 	}
 
 	// Creating application tables
-	for _, query := range models.Tables {
+	for i, query := range models.Tables {
+		log.Printf("\"Creating\" table on index %v", i)
 		if _, err := db.Exec(query); err != nil {
 			log.Fatalf("Error creating tables: %v", err)
 		}
