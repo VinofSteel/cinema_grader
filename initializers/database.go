@@ -33,7 +33,7 @@ func InitializeDB() *sql.DB {
 	}
 
 	log.Println("Connection opened succesfully!")
-	
+
 	// Executing table creation queries as soon as DB is opened
 	createTables(db)
 

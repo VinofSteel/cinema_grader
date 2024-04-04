@@ -1,6 +1,7 @@
 package models
 
 import "time"
+
 type User struct {
 	Name      string    `json:"name"`
 	Surname   string    `json:"surname"`
@@ -8,7 +9,7 @@ type User struct {
 	Password  string    `json:"password"`
 	Birthday  time.Time `json:"birthday"`
 	IsAdm     bool      `json:"isAdm"`
-	CreatedAt  time.Time `json:"createdAt"`
+	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	DeletedAt time.Time `json:"deletedAt"`
 }
@@ -29,16 +30,16 @@ const UsersTable string = `
 `
 
 type Movie struct {
-	Title string `json:"title"`
-	Director string `json:"director"`
+	Title       string    `json:"title"`
+	Director    string    `json:"director"`
 	ReleaseDate time.Time `json:"releaseData"`
-	Grade float64 `json:"grade"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	DeletedAt time.Time `json:"deletedAt"`
-	
-	CreatorId string `json:"creatorId"`
-	Actors []Actor `json:"actors"`
+	Grade       float64   `json:"grade"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	DeletedAt   time.Time `json:"deletedAt"`
+
+	CreatorId string  `json:"creatorId"`
+	Actors    []Actor `json:"actors"`
 }
 
 const MoviesTable string = `
@@ -56,16 +57,17 @@ const MoviesTable string = `
 		FOREIGN KEY (creator_id) REFERENCES users(id)
 	);
 `
+
 type Actor struct {
 	Name      string    `json:"name"`
 	Surname   string    `json:"surname"`
 	Birthday  time.Time `json:"birthday"`
-	CreatedAt  time.Time `json:"createdAt"`
+	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	DeletedAt time.Time `json:"deletedAt"`
 
-	CreatorId string `json:"creatorId"`
-	Movies []Movie `json:"movies"`
+	CreatorId string  `json:"creatorId"`
+	Movies    []Movie `json:"movies"`
 }
 
 const ActorsTable string = `
@@ -93,14 +95,15 @@ const MoviesActorsPivotTable string = `
 		FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE RESTRICT
 	);
 `
+
 type Comment struct {
-	Comment      string    `json:"comment"`
-	Grade float64 `json:"grade"`
-	CreatedAt  time.Time `json:"createdAt"`
+	Comment   string    `json:"comment"`
+	Grade     float64   `json:"grade"`
+	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	DeletedAt time.Time `json:"deletedAt"`
 
-	UserId string `json:"userId"`
+	UserId  string `json:"userId"`
 	MovieId string `json:"movieId"`
 }
 
