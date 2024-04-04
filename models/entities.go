@@ -2,18 +2,6 @@ package models
 
 import "time"
 
-type User struct {
-	Name      string    `json:"name"`
-	Surname   string    `json:"surname"`
-	Email     string    `json:"email"`
-	Password  string    `json:"password"`
-	Birthday  time.Time `json:"birthday"`
-	IsAdm     bool      `json:"isAdm"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	DeletedAt time.Time `json:"deletedAt"`
-}
-
 const UsersTable string = `
 	CREATE TABLE IF NOT EXISTS users (
 		id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

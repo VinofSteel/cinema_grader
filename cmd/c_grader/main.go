@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/VinOfSteel/cinemagrader/controllers"
 	"github.com/VinOfSteel/cinemagrader/initializers"
 	"github.com/gofiber/fiber/v2"
 )
@@ -27,10 +28,18 @@ func main() {
 	}
 	app := fiber.New(fiberConfig)
 
+	// Controller
+	userController := controllers.User{
+		DB: db,
+	}
+
 	// Routes
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
 	})
+
+	// User
+	app.Post("/users", userController.CreateUser)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }
