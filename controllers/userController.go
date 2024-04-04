@@ -37,13 +37,13 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 			"message": "Internal Server Error",
 		})
 	}
-	userBody.Password = string(hashedPassword)	
+	userBody.Password = string(hashedPassword)
 
 	user, err := UserModel.InsertUserInDB(u.DB, userBody)
 	if err != nil {
 		log.Println("Error inserting user in DB:", err)
 		c.Status(fiber.ErrInternalServerError.Code).JSON(fiber.Map{
-			"message": err,
+			"message": "Internal Server Error",
 		})
 		return err
 	}
