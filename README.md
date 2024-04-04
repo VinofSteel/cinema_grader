@@ -23,7 +23,7 @@ existem algumas libraries auxiliares para auxiliar com autenticação (`bcrypt`,
 - Como já notado pelos items acima, a API integra autenticação e utiliza diversos middlewares. Consulte a seção de documentação neste README para ver mais detalhes sobre rotas.
 
 ## Rodando a API
-1. Instale a ferramenta (Air)[https://github.com/cosmtrek/air]. Se você tem acesso a minha playlist de backend, tem detalhes sobre como fazer isso na Aula número **4** da playlist de Backend.
+1. Instale a ferramenta [Air](https://github.com/cosmtrek/air). Se você tem acesso a minha playlist de backend, tem detalhes sobre como fazer isso na Aula número **4** da playlist de Backend.
 2. Rode um banco **PostgreSQL** na versão **16.2**, seja localmente ou remotamente (novamente, se tiver acesso e quiser saber como rodar um banco PostgreSQL localmente, aula **5** da minha playlist de backend).
 3. Crie um arquivo `.env` na raiz do repo, copiado do arquivo `.env.example`.
 4. Preencha as variáveis de ambiente conforme o que está comentado no arquivo.
@@ -32,5 +32,5 @@ existem algumas libraries auxiliares para auxiliar com autenticação (`bcrypt`,
 
 ## Documentação
 Na pasta `api` na raiz do diretório temos
-1. Um arquivo `c_grader.json` que é um arquivo de configuração do API Client (Bruno)[https://www.usebruno.com/] que mostra todas as rotas com requisições já prontas para elas
-2. O DER (Diagrama de entidades e relações) da nossa database, que demonstra quais as tabelas que existem e a relação entre elas. Foi feita no site (Draw.io)[draw.io] e recomendo abrir a imagem dentro do arquivo para facilitar a leitura, visto que o png tem alguns defeitos de visualização.
+1. Um arquivo `c_grader.json` que é um arquivo de configuração do API Client [Bruno](https://www.usebruno.com/) que mostra todas as rotas com requisições já prontas para elas
+2. O DER (Diagrama de entidades e relações) da nossa database, que demonstra quais as tabelas que existem e a relação entre elas. Foi feita no site [Draw.io](https://app.diagrams.net/) e recomendo abrir a imagem dentro do arquivo para facilitar a leitura, visto que o png tem alguns defeitos de visualização.
