@@ -37,16 +37,15 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 
 		for _, err := range errors {
 			errMsgs = append(errMsgs, fmt.Sprintf(
-				"[%s]: '%v' | Needs to implement '%s'",
+				"Field %s: '%s'",
 				err.FailedField,
-				err.Value,
-				err.Tag,
+				err.ErrorMessage,
 			))
 		}
 
 		return &fiber.Error{
 			Code:    fiber.ErrBadRequest.Code,
-			Message: strings.Join(errMsgs, ", "),
+			Message: strings.Join(errMsgs, " | "),
 		}
 	}
 
@@ -56,16 +55,16 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 		if err != sql.ErrNoRows {
 			log.Println("Error getting user by email:", err)
 			return &fiber.Error{
-				Code: fiber.StatusInternalServerError,
+				Code:    fiber.StatusInternalServerError,
 				Message: "Unknown error",
 			}
 		}
 	}
-	
+
 	if existingUser.ID != "" {
 		log.Println("Trying to create user with existing email in db")
 		return &fiber.Error{
-			Code: fiber.StatusBadRequest,
+			Code:    fiber.StatusBadRequest,
 			Message: "User with this email already exists",
 		}
 	}

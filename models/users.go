@@ -7,15 +7,15 @@ import (
 )
 
 type UserModel struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name" validate:"required"`
-	Surname   string    `json:"surname" validate:"omitempty"`
-	Email     string    `json:"email" validate:"required,email"`
-	Password  string    `json:"password" validate:"required,passwoddddrd"`
-	Birthday  string    `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
-	IsAdm     bool      `json:"isAdm"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        string       `json:"id"`
+	Name      string       `json:"name" validate:"required"`
+	Surname   string       `json:"surname" validate:"omitempty"`
+	Email     string       `json:"email" validate:"required,email"`
+	Password  string       `json:"password" validate:"required,passwoddddrd"`
+	Birthday  string       `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
+	IsAdm     bool         `json:"isAdm"`
+	CreatedAt time.Time    `json:"createdAt"`
+	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
 }
 
@@ -61,7 +61,7 @@ func (u *UserModel) GetUserByEmail(db *sql.DB, email string) (UserModel, error) 
 	var user UserModel
 	err := db.QueryRow(query, email).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt)
 	if err != nil {
-		log.Printf("Error getting user by email: %v\n", err) 
+		log.Printf("Error getting user by email: %v\n", err)
 		return UserModel{}, err
 	}
 
