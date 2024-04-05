@@ -12,7 +12,6 @@ import (
 )
 
 type GlobalErrorHandlerResp struct {
-	Success bool   `json:"success"`
 	Message string `json:"message"`
 }
 
@@ -33,7 +32,6 @@ func main() {
 		IdleTimeout:   120 * time.Second,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			return c.Status(fiber.StatusBadRequest).JSON(GlobalErrorHandlerResp{
-				Success: false,
 				Message: err.Error(),
 			})
 		},

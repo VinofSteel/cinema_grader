@@ -26,10 +26,10 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 	var userBody models.UserBody
 	if err := c.BodyParser(&userBody); err != nil {
 		log.Println("Error parsing JSON body:", err)
-		c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Internal Server Error",
-		})
-		return err
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error while parsing JSON body",
+		}
 	}
 
 	if errors := validation.ValidateData(userBody); len(errors) > 0 && errors[0].Error {
@@ -50,23 +50,44 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 		}
 	}
 
+	// Checking if user already exists in DB
+	existingUser, err := UserModel.GetUserByEmail(u.DB, userBody.Email)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			log.Println("Error getting user by email:", err)
+			return &fiber.Error{
+				Code: fiber.StatusInternalServerError,
+				Message: "Unknown error",
+			}
+		}
+	}
+	
+	if existingUser.ID != "" {
+		log.Println("Trying to create user with existing email in db")
+		return &fiber.Error{
+			Code: fiber.StatusBadRequest,
+			Message: "User with this email already exists",
+		}
+	}
+
 	// Encrypting user's password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userBody.Password), 12)
 	if err != nil {
 		log.Println("Error encrypting user's password:", err)
-		c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Internal Server Error",
-		})
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
 	}
 	userBody.Password = string(hashedPassword)
 
 	user, err := UserModel.InsertUserInDB(u.DB, userBody)
 	if err != nil {
 		log.Println("Error inserting user in DB:", err)
-		c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Internal Server Error",
-		})
-		return err
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
 	}
 
 	c.Status(fiber.StatusOK).JSON(user)
