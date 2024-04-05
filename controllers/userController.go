@@ -2,9 +2,7 @@ package controllers
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/VinOfSteel/cinemagrader/models"
 	"github.com/VinOfSteel/cinemagrader/validation"
@@ -31,22 +29,10 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 			Message: "Unknown error while parsing JSON body",
 		}
 	}
-
-	if errors := validation.ValidateData(userBody); len(errors) > 0 && errors[0].Error {
-		errMsgs := make([]string, 0)
-
-		for _, err := range errors {
-			errMsgs = append(errMsgs, fmt.Sprintf(
-				"Field %s: '%s'",
-				err.FailedField,
-				err.ErrorMessage,
-			))
-		}
-
-		return &fiber.Error{
-			Code:    fiber.ErrBadRequest.Code,
-			Message: strings.Join(errMsgs, " | "),
-		}
+	
+	// Validating input data. We return "nil" because the ValidateData function sends a response back by itself and we need to return here to stop the function.
+	if valid := validation.ValidateData(c, userBody); !valid {
+		return nil
 	}
 
 	// Checking if user already exists in DB
