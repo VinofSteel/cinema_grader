@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 const UsersTable string = `
 	CREATE TABLE IF NOT EXISTS users (

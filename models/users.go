@@ -7,11 +7,11 @@ import (
 )
 
 type UserModel struct {
-	Name      string    `json:"name"`
-	Surname   string    `json:"surname"`
-	Email     string    `json:"email"`
-	Password  string    `json:"password"`
-	Birthday  time.Time `json:"birthday"`
+	Name      string    `json:"name" validate:"required"`
+	Surname   string    `json:"surname" validate:"omitempty"`
+	Email     string    `json:"email" validate:"required,email"`
+	Password  string    `json:"password" validate:"required,password"`
+	Birthday  time.Time `json:"birthday" validate:"omitempty,birthday"`
 	IsAdm     bool      `json:"isAdm"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -19,11 +19,11 @@ type UserModel struct {
 }
 
 type UserBody struct {
-	Name     string    `json:"name"`
-	Surname  string    `json:"surname"`
-	Email    string    `json:"email"`
-	Password string    `json:"password"`
-	Birthday time.Time `json:"birthday"`
+	Name     string    `json:"name" validate:"required"`
+	Surname  string    `json:"surname" validate:"omitempty"`
+	Email    string    `json:"email" validate:"required,email"`
+	Password string    `json:"password" validate:"required,password"`
+	Birthday time.Time `json:"birthday" validate:"omitempty,birthday"`
 }
 
 type UserResponse struct {

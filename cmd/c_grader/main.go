@@ -11,9 +11,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type GlobalErrorHandlerResp struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
 func main() {
 	// Calling initializers
 	initializers.InitializeEnv()
+	initializers.InitializeValidator()
 	db := initializers.InitializeDB()
 	defer db.Close()
 
@@ -25,20 +31,21 @@ func main() {
 		ReadTimeout:   30 * time.Second,
 		WriteTimeout:  90 * time.Second,
 		IdleTimeout:   120 * time.Second,
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			return c.Status(fiber.StatusBadRequest).JSON(GlobalErrorHandlerResp{
+				Success: false,
+				Message: err.Error(),
+			})
+		},
 	}
 	app := fiber.New(fiberConfig)
 
-	// Controller
+	// Controllers
 	userController := controllers.User{
 		DB: db,
 	}
 
-	// Routes
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
-
-	// User
+	// Routes - User
 	app.Post("/users", userController.CreateUser)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
