@@ -94,15 +94,6 @@ func Teardown() error {
 }
 
 func Test_NewDatabaseConn(t *testing.T) {
-	// Save current environment variables
-	savedEnv := map[string]string{}
-	for _, key := range []string{"PGUSER", "PGPASSWORD", "PGHOST", "PGPORT", "PGDATABASE"} {
-		savedEnv[key] = os.Getenv(key)
-		defer func(key, value string) {
-			os.Setenv(key, value)
-		}(key, savedEnv[key])
-	}
-
 	os.Setenv("PGDATABASE", "testdb")
 
 	// Call the function being tested
