@@ -18,7 +18,7 @@ type ErrorResponse struct {
 
 var Validate *validator.Validate
 
-func structValidation(data interface{}) []ErrorResponse {
+func StructValidation(data interface{}) []ErrorResponse {
 	var validationErrors []ErrorResponse
 
 	errors := Validate.Struct(data)
@@ -36,7 +36,7 @@ func structValidation(data interface{}) []ErrorResponse {
 			case "password":
 				elem.ErrorMessage = "The password field needs to have at least 8 characters in length, at least one symbol, one lowercased letter, one uppercased letter and one number."
 			case "email":
-				elem.ErrorMessage = "The email field needs to be a valid email"
+				elem.ErrorMessage = "The email field needs to be a valid email."
 			case "datetime":
 				elem.ErrorMessage = fmt.Sprintf("The %s field needs to follow the YYYY-MM-DD format.", strings.ToLower(err.Field()))
 			}
@@ -50,7 +50,7 @@ func structValidation(data interface{}) []ErrorResponse {
 
 func ValidateData(c *fiber.Ctx, data interface{}) bool {
 	log.Println("Executing ValidateData function...")
-	if errors := structValidation(data); len(errors) > 0 && errors[0].Error {
+	if errors := StructValidation(data); len(errors) > 0 && errors[0].Error {
 		errMap := make(map[string]string)
 
 		for _, err := range errors {

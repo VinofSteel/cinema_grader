@@ -11,7 +11,7 @@ type UserModel struct {
 	Name      string       `json:"name" validate:"required"`
 	Surname   string       `json:"surname" validate:"omitempty"`
 	Email     string       `json:"email" validate:"required,email"`
-	Password  string       `json:"password" validate:"required,passwoddddrd"`
+	Password  string       `json:"password" validate:"required,password"`
 	Birthday  string       `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
 	IsAdm     bool         `json:"isAdm"`
 	CreatedAt time.Time    `json:"createdAt"`
