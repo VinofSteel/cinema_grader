@@ -12,7 +12,7 @@ import (
 var validate *validator.Validate
 
 func TestMain(m *testing.M) {
-	validate = initializers.InitializeValidator()
+	validate = initializers.NewValidator()
 	os.Exit(m.Run())
 }
 

@@ -17,10 +17,10 @@ type GlobalErrorHandlerResp struct {
 
 func main() {
 	// Calling initializers
-	initializers.InitializeEnv()
+	initializers.StartEnvironmentVariables()
 	
-	validate := initializers.InitializeValidator()
-	db := initializers.InitializeDB()
+	validate := initializers.NewValidator()
+	db := initializers.NewDatabaseConn()
 	defer db.Close()
 
 	// Starting fiber

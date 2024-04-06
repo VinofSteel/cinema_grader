@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func InitializeDB() *sql.DB {
+func NewDatabaseConn() *sql.DB {
 	var (
 		user     string = os.Getenv("PGUSER")
 		password string = os.Getenv("PGPASSWORD")

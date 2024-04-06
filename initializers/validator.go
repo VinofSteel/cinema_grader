@@ -22,7 +22,7 @@ func passwordValidation(fl validator.FieldLevel) bool {
 	return hasSymbolRegex.MatchString(password) && hasUppercaseRegex.MatchString(password) && hasNumberRegex.MatchString(password)
 }
 
-func InitializeValidator() *validator.Validate {
+func NewValidator() *validator.Validate {
 	// Initializing a single instance of the validator
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
