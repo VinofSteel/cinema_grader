@@ -10,6 +10,6 @@ func StartEnvironmentVariables() {
 	err := godotenv.Load()
 
 	if err != nil {
-		log.Fatal("Error initializing environment variables")
+		log.Fatal("Error initializing environment variables", err)
 	}
 }
