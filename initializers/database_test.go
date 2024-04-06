@@ -11,15 +11,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// Initializing env variables
-	err := godotenv.Load("../.env")
-
-	if err != nil {
-		log.Fatal("Error initializing environment variables", err)
-	}
-
     // Setup
-    if err := setup(); err != nil {
+    if err := Setup(); err != nil {
         log.Fatalf("Error setting up tests: %v", err)
     }
 
@@ -27,26 +20,32 @@ func TestMain(m *testing.M) {
     exitCode := m.Run()
 
     // Teardown
-    if err := teardown(); err != nil {
+    if err := Teardown(); err != nil {
         log.Fatalf("Error tearing down tests: %v", err)
     }
 
-    // Exit
     os.Exit(exitCode)
 }
 
-func setup() error {
-    // Read environment variables from .env file
-    user := os.Getenv("PGUSER")
-    password := os.Getenv("PGPASSWORD")
-    host := os.Getenv("PGHOST")
-    port := os.Getenv("PGPORT")
-    dbName := os.Getenv("PGDATABASE")
+func Setup() error {
+	// Initializing env variables
+	err := godotenv.Load("../.env")
 
-    // Create connection string
-    connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbName)
+	if err != nil {
+		log.Fatal("Error initializing environment variables", err)
+	}
+    
+    var (
+		user     string = os.Getenv("PGUSER")
+		password string = os.Getenv("PGPASSWORD")
+		host     string = os.Getenv("PGHOST")
+		port     string = os.Getenv("PGPORT")
+		dbName   string = os.Getenv("PGDATABASE")
+	)
 
     // Connect to PostgreSQL
+    connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbName)
+
     db, err := sql.Open("postgres", connStr)
     if err != nil {
         return fmt.Errorf("error connecting to PostgreSQL: %v", err)
@@ -62,18 +61,19 @@ func setup() error {
     return nil
 }
 
-func teardown() error {
+func Teardown() error {
     // Read environment variables from .env file
-    user := os.Getenv("PGUSER")
-    password := os.Getenv("PGPASSWORD")
-    host := os.Getenv("PGHOST")
-    port := os.Getenv("PGPORT")
-    dbName := "testdb"
-
-    // Create connection string
-    connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, "postgres")
+	var (
+		user     string = os.Getenv("PGUSER")
+		password string = os.Getenv("PGPASSWORD")
+		host     string = os.Getenv("PGHOST")
+		port     string = os.Getenv("PGPORT")
+		dbName   string = "testdb"
+	)
 
     // Connect to PostgreSQL
+    connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, "postgres")
+
     db, err := sql.Open("postgres", connStr)
     if err != nil {
         return fmt.Errorf("error connecting to PostgreSQL: %v", err)
@@ -86,7 +86,7 @@ func teardown() error {
     }
 
     // Drop test database
-    if _, err := db.Exec("DROP DATABASE IF EXISTS " + dbName); err != nil {
+    if _, err := db.Exec("DROP DATABASE IF EXISTS " + dbName + ";"); err != nil {
         return fmt.Errorf("error dropping test database: %v", err)
     }
 
