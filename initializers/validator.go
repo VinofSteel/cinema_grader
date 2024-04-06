@@ -6,8 +6,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-var Validate *validator.Validate
-
 func passwordValidation(fl validator.FieldLevel) bool {
 	password := fl.Field().String()
 
@@ -24,10 +22,12 @@ func passwordValidation(fl validator.FieldLevel) bool {
 	return hasSymbolRegex.MatchString(password) && hasUppercaseRegex.MatchString(password) && hasNumberRegex.MatchString(password)
 }
 
-func InitializeValidator() {
+func InitializeValidator() *validator.Validate {
 	// Initializing a single instance of the validator
-	Validate = validator.New(validator.WithRequiredStructEnabled())
+	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	// Validator custom functions
-	Validate.RegisterValidation("password", passwordValidation)
+	validate.RegisterValidation("password", passwordValidation)
+
+	return validate
 }

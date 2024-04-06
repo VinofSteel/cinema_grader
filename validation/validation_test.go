@@ -6,16 +6,20 @@ import (
 	"testing"
 
 	"github.com/VinOfSteel/cinemagrader/initializers"
+	"github.com/go-playground/validator/v10"
 )
 
+var validate *validator.Validate
+
 func TestMain(m *testing.M) {
-	initializers.InitializeValidator()
+	validate = initializers.InitializeValidator()
 	os.Exit(m.Run())
 }
 
 func Test_structValidation(t *testing.T) {
 	type args struct {
-		data interface{}
+		data     interface{}
+		validate *validator.Validate
 	}
 	tests := []struct {
 		name string
@@ -25,6 +29,7 @@ func Test_structValidation(t *testing.T) {
 		{
 			name: "SuccessCase Testing-common-and-custom-validation",
 			args: args{
+				validate: validate,
 				data: struct {
 					Name     string `json:"name" validate:"required"`
 					Email    string `json:"email" validate:"required,email"`
@@ -40,6 +45,7 @@ func Test_structValidation(t *testing.T) {
 		{
 			name: "InvalidCase Testing-common-and-custom-validation",
 			args: args{
+				validate: validate,
 				data: struct {
 					Name     string `json:"name" validate:"required"`
 					Surname  string `json:"surname" validate:"omitempty"`
@@ -82,7 +88,7 @@ func Test_structValidation(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			got := structValidation(testCase.args.data)
+			got := structValidation(testCase.args.validate, testCase.args.data)
 			for i, err := range testCase.want {
 				funcResponse := got[i]
 

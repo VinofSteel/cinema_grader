@@ -6,13 +6,15 @@ import (
 
 	"github.com/VinOfSteel/cinemagrader/models"
 	"github.com/VinOfSteel/cinemagrader/validation"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // Controller type
 type User struct {
-	DB *sql.DB
+	DB       *sql.DB
+	Validate *validator.Validate
 }
 
 // User model
@@ -31,7 +33,7 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 	}
 
 	// Validating input data. We return "nil" because the ValidateData function sends a response back by itself and we need to return here to stop the function.
-	if valid := validation.ValidateData(c, userBody); !valid {
+	if valid := validation.ValidateData(c, u.Validate, userBody); !valid {
 		return nil
 	}
 

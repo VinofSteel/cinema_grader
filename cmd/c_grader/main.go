@@ -18,7 +18,8 @@ type GlobalErrorHandlerResp struct {
 func main() {
 	// Calling initializers
 	initializers.InitializeEnv()
-	initializers.InitializeValidator()
+	
+	validate := initializers.InitializeValidator()
 	db := initializers.InitializeDB()
 	defer db.Close()
 
@@ -40,7 +41,8 @@ func main() {
 
 	// Controllers
 	userController := controllers.User{
-		DB: db,
+		DB:       db,
+		Validate: validate,
 	}
 
 	// Routes - User
