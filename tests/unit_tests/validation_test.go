@@ -24,7 +24,7 @@ func Test_StructValidation(t *testing.T) {
 		want []validation.ErrorResponse
 	}{
 		{
-			name: "Success Case - Testing common and custom validation",
+			name: "SuccessCase Testing-common-and-custom-validation",
 			args: args{
 				data: struct {
 					Name     string `json:"name" validate:"required"`
@@ -39,7 +39,7 @@ func Test_StructValidation(t *testing.T) {
 			want: []validation.ErrorResponse{},
 		},
 		{
-			name: "Invalid Data",
+			name: "InvalidCase Testing-common-and-custom-validation",
 			args: args{
 				data: struct{
 					Name     string `json:"name" validate:"required"`
