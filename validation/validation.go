@@ -57,13 +57,13 @@ func ValidateData(c *fiber.Ctx, data interface{}) bool {
 			errMap[err.FailedField] = err.ErrorMessage
 		}
 
-		c.Status(fiber.ErrBadRequest.Code).JSON(struct{
-				Message string `json:"message"`
-				Errors map[string]string `json:"errors"`
-			}{
-				Message: "Validation failed",
-				Errors: errMap,
-			},
+		c.Status(fiber.ErrBadRequest.Code).JSON(struct {
+			Message string            `json:"message"`
+			Errors  map[string]string `json:"errors"`
+		}{
+			Message: "Validation failed",
+			Errors:  errMap,
+		},
 		)
 
 		return false

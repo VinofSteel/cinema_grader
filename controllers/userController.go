@@ -29,7 +29,7 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 			Message: "Unknown error while parsing JSON body",
 		}
 	}
-	
+
 	// Validating input data. We return "nil" because the ValidateData function sends a response back by itself and we need to return here to stop the function.
 	if valid := validation.ValidateData(c, userBody); !valid {
 		return nil
