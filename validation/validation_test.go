@@ -1,4 +1,4 @@
-package unit_tests
+package validation
 
 import (
 	"os"
@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/VinOfSteel/cinemagrader/initializers"
-	"github.com/VinOfSteel/cinemagrader/validation"
 )
 
 func TestMain(m *testing.M) {
@@ -14,14 +13,14 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func Test_StructValidation(t *testing.T) {
+func Test_structValidation(t *testing.T) {
 	type args struct {
 		data interface{}
 	}
 	tests := []struct {
 		name string
 		args args
-		want []validation.ErrorResponse
+		want []ErrorResponse
 	}{
 		{
 			name: "SuccessCase Testing-common-and-custom-validation",
@@ -36,7 +35,7 @@ func Test_StructValidation(t *testing.T) {
 					Password: "Johnjohn123%@",
 				},
 			},
-			want: []validation.ErrorResponse{},
+			want: []ErrorResponse{},
 		},
 		{
 			name: "InvalidCase Testing-common-and-custom-validation",
@@ -53,7 +52,7 @@ func Test_StructValidation(t *testing.T) {
 					Birthday: "23/09/1997",
 				},
 			},
-			want: []validation.ErrorResponse{
+			want: []ErrorResponse{
 				{
 					Error:        true,
 					FailedField:  "name",
@@ -83,7 +82,7 @@ func Test_StructValidation(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			got := validation.StructValidation(testCase.args.data)
+			got := structValidation(testCase.args.data)
 			for i, err := range testCase.want {
 				funcResponse := got[i]
 

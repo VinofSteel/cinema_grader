@@ -3,9 +3,10 @@ package initializers
 import (
 	"regexp"
 
-	"github.com/VinOfSteel/cinemagrader/validation"
 	"github.com/go-playground/validator/v10"
 )
+
+var Validate *validator.Validate
 
 func passwordValidation(fl validator.FieldLevel) bool {
 	password := fl.Field().String()
@@ -25,8 +26,8 @@ func passwordValidation(fl validator.FieldLevel) bool {
 
 func InitializeValidator() {
 	// Initializing a single instance of the validator
-	validation.Validate = validator.New(validator.WithRequiredStructEnabled())
+	Validate = validator.New(validator.WithRequiredStructEnabled())
 
 	// Validator custom functions
-	validation.Validate.RegisterValidation("password", passwordValidation)
+	Validate.RegisterValidation("password", passwordValidation)
 }

@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/VinOfSteel/cinemagrader/initializers"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -16,12 +17,10 @@ type ErrorResponse struct {
 	ErrorMessage string
 }
 
-var Validate *validator.Validate
-
-func StructValidation(data interface{}) []ErrorResponse {
+func structValidation(data interface{}) []ErrorResponse {
 	var validationErrors []ErrorResponse
 
-	errors := Validate.Struct(data)
+	errors := initializers.Validate.Struct(data)
 	if errors != nil {
 		for _, err := range errors.(validator.ValidationErrors) {
 			var elem ErrorResponse
@@ -50,7 +49,7 @@ func StructValidation(data interface{}) []ErrorResponse {
 
 func ValidateData(c *fiber.Ctx, data interface{}) bool {
 	log.Println("Executing ValidateData function...")
-	if errors := StructValidation(data); len(errors) > 0 && errors[0].Error {
+	if errors := structValidation(data); len(errors) > 0 && errors[0].Error {
 		errMap := make(map[string]string)
 
 		for _, err := range errors {
