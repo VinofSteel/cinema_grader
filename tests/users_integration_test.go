@@ -72,6 +72,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
+// No need to test for validation errors because the validation function is already unit tested elsewhere
 func Test_UsersRoutes(t *testing.T) {
 	testCases := []struct {
 		description      string
