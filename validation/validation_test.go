@@ -21,7 +21,7 @@ func Test_structValidation(t *testing.T) {
 		data     interface{}
 		validate *validator.Validate
 	}
-	tests := []struct {
+	testCases := []struct {
 		name string
 		args args
 		want []ErrorResponse
@@ -86,7 +86,7 @@ func Test_structValidation(t *testing.T) {
 			},
 		},
 	}
-	for _, testCase := range tests {
+	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			got := structValidation(testCase.args.validate, testCase.args.data)
 			for i, err := range testCase.want {
