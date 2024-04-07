@@ -19,10 +19,13 @@ import (
 var app *fiber.App
 
 func TestMain(m *testing.M) {
-	if err := Setup(); err != nil {
-		log.Fatalf("Error setting up tests: %v", err)
+	var err error
+	testDb, err = Setup()
+    if err != nil {
+        log.Fatalf("Error setting up tests: %v", err)
     }
-	os.Setenv("PGDATABASE", "testdb")
+	
+	os.Setenv("PGDATABASE", testDb)
 
 	validate := initializers.NewValidator()
 	db := initializers.NewDatabaseConn()

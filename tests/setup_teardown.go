@@ -4,18 +4,37 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 
 	"github.com/joho/godotenv"
 )
 
-func Setup() error {
-	// Initializing env variables
-	err := godotenv.Load("../.env")
+var testDb string
 
-	if err != nil {
-		log.Fatal("Error initializing environment variables", err)
-	}
+func Setup() (string, error) {
+	// Initializing env variables
+	func() {
+		err := godotenv.Load("../.env")
+	
+		if err != nil {
+			log.Fatal("Error initializing environment variables", err)
+		}
+	}()
+
+	// Generating a random string to be the test database name.
+	// This is done because all tests run in paralel, meaning that we would be creating 
+	// a bunch of DBs with the same name.
+	func() {
+		const letterBytes = "abcdefghijklmnopqrstuvwxyz"
+
+		b := []byte{'t', 'e', 's', 't', '_'}
+		for len(b) < 15 {
+			b = append(b, letterBytes[rand.Intn(len(letterBytes))])
+		}
+
+		testDb = string(b)
+	}()
 
 	var (
 		user     string = os.Getenv("PGUSER")
@@ -30,17 +49,16 @@ func Setup() error {
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		return fmt.Errorf("error connecting to PostgreSQL: %v", err)
+		return "", fmt.Errorf("error connecting to PostgreSQL: %v", err)
 	}
 	defer db.Close()
 
 	// Create test database
-	testDb := "testdb"
 	if _, err := db.Exec("CREATE DATABASE " + testDb + ";"); err != nil {
-		return fmt.Errorf("error creating test database: %v", err)
+		return "", fmt.Errorf("error creating test database: %v", err)
 	}
 
-	return nil
+	return testDb, nil
 }
 
 func Teardown() error {
@@ -50,7 +68,7 @@ func Teardown() error {
 		password string = os.Getenv("PGPASSWORD")
 		host     string = os.Getenv("PGHOST")
 		port     string = os.Getenv("PGPORT")
-		dbName   string = "testdb"
+		dbName   string = testDb
 	)
 
 	// Connect to PostgreSQL

@@ -8,9 +8,13 @@ import (
 	"github.com/VinOfSteel/cinemagrader/tests"
 )
 
+var testDb string
+
 func TestMain(m *testing.M) {
     // Setup
-    if err := tests.Setup(); err != nil {
+	var err error
+	testDb, err = tests.Setup()
+    if err != nil {
         log.Fatalf("Error setting up tests: %v", err)
     }
 
@@ -26,7 +30,7 @@ func TestMain(m *testing.M) {
 }
 
 func Test_NewDatabaseConn(t *testing.T) {
-	os.Setenv("PGDATABASE", "testdb")
+	os.Setenv("PGDATABASE", testDb)
 
 	// Call the function being tested
 	db := NewDatabaseConn()

@@ -29,6 +29,7 @@ existem algumas libraries auxiliares para auxiliar com autenticação (`bcrypt`,
 4. Preencha as variáveis de ambiente conforme o que está comentado no arquivo.
 5. Se você tiver o `make` instalado, pode rodar `make` no terminal que ele vai executar o `Makefile` na raiz do projeto.
 6. Alternativamente, rode o comando `air` em um terminal na raiz do repo. Pronto! Agora o código está rodando e você pode executar suas requisições a vontade.
+7. Essa API possui testes automatizados. Para rodá-los, execute o comando `go test ./...` na raiz do projeto, que irá recursivamente consultar todas as pastas do repositório e rodar os testes encontrados. Caso queira rodar alguma pasta específica, é só colocar o caminho dela como argumento ao invés do `./...` (ex: `go test ./tests`). Testes de integração estão na pasta `tests` e os testes unitários estão na mesma pasta que seus arquivos, como dita o paradigma de testes automatizados da linguagem.
 
 ## Documentação
 Na pasta `api` na raiz do diretório temos
