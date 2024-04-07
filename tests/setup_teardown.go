@@ -16,14 +16,14 @@ func Setup() (string, error) {
 	// Initializing env variables
 	func() {
 		err := godotenv.Load("../.env")
-	
+
 		if err != nil {
 			log.Fatal("Error initializing environment variables", err)
 		}
 	}()
 
 	// Generating a random string to be the test database name.
-	// This is done because all tests run in paralel, meaning that we would be creating 
+	// This is done because all tests run in paralel, meaning that we would be creating
 	// a bunch of DBs with the same name.
 	func() {
 		const letterBytes = "abcdefghijklmnopqrstuvwxyz"
@@ -92,4 +92,3 @@ func Teardown() error {
 
 	return nil
 }
-

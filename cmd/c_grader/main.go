@@ -18,7 +18,7 @@ type GlobalErrorHandlerResp struct {
 func main() {
 	// Calling initializers
 	initializers.StartEnvironmentVariables()
-	
+
 	validate := initializers.NewValidator()
 	db := initializers.NewDatabaseConn()
 	defer db.Close()

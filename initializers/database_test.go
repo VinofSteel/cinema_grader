@@ -11,22 +11,22 @@ import (
 var testDb string
 
 func TestMain(m *testing.M) {
-    // Setup
+	// Setup
 	var err error
 	testDb, err = tests.Setup()
-    if err != nil {
-        log.Fatalf("Error setting up tests: %v", err)
-    }
+	if err != nil {
+		log.Fatalf("Error setting up tests: %v", err)
+	}
 
-    // Run tests
-    exitCode := m.Run()
+	// Run tests
+	exitCode := m.Run()
 
-    // Teardown
-    if err := tests.Teardown(); err != nil {
-        log.Fatalf("Error tearing down tests: %v", err)
-    }
+	// Teardown
+	if err := tests.Teardown(); err != nil {
+		log.Fatalf("Error tearing down tests: %v", err)
+	}
 
-    os.Exit(exitCode)
+	os.Exit(exitCode)
 }
 
 func Test_NewDatabaseConn(t *testing.T) {

@@ -21,10 +21,10 @@ var app *fiber.App
 func TestMain(m *testing.M) {
 	var err error
 	testDb, err = Setup()
-    if err != nil {
-        log.Fatalf("Error setting up tests: %v", err)
-    }
-	
+	if err != nil {
+		log.Fatalf("Error setting up tests: %v", err)
+	}
+
 	os.Setenv("PGDATABASE", testDb)
 
 	validate := initializers.NewValidator()
@@ -40,34 +40,34 @@ func TestMain(m *testing.M) {
 
 	app.Post("/users", userController.CreateUser)
 
-    // Run tests
-    exitCode := m.Run()
+	// Run tests
+	exitCode := m.Run()
 
-    // Teardown
-    if err := Teardown(); err != nil {
-        log.Fatalf("Error tearing down tests: %v", err)
-    }
+	// Teardown
+	if err := Teardown(); err != nil {
+		log.Fatalf("Error tearing down tests: %v", err)
+	}
 
-    os.Exit(exitCode)
+	os.Exit(exitCode)
 }
 
 func Test_UsersRoutes(t *testing.T) {
-	testCases := []struct{
-		description string
-		route string
-		method string
-		data map[string]interface{}
-		expectedCode int
+	testCases := []struct {
+		description      string
+		route            string
+		method           string
+		data             map[string]interface{}
+		expectedCode     int
 		expectedResponse interface{}
 	}{
 		{
 			description: "POST - Create a new user route",
-			route: "/users",
-			method: "POST",
-			data: map[string]interface{} {
-				"name": "Astolfo",
-				"surname": "O inho",
-				"email": "astolfinho@astolfinho.com.br",
+			route:       "/users",
+			method:      "POST",
+			data: map[string]interface{}{
+				"name":     "Astolfo",
+				"surname":  "O inho",
+				"email":    "astolfinho@astolfinho.com.br",
 				"password": "Astolfinho123@*",
 				"birthday": "1990-10-10",
 			},
@@ -97,7 +97,7 @@ func Test_UsersRoutes(t *testing.T) {
 		} else {
 			req = httptest.NewRequest(testCase.method, testCase.route, nil)
 		}
-		
+
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := app.Test(req, -1)
