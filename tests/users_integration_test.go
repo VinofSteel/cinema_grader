@@ -114,7 +114,7 @@ func Test_UsersRoutes(t *testing.T) {
 		}
 
 		// Verifying status code
-        assert.Equal(t, testCase.expectedCode, resp.StatusCode, "status code")
+		assert.Equal(t, testCase.expectedCode, resp.StatusCode, "status code")
 
 		// Unmarshallhing the responseBody into an actual struct
 		var respStruct models.UserResponse
@@ -123,10 +123,10 @@ func Test_UsersRoutes(t *testing.T) {
 		}
 
 		compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
-			expected.ID = "" // Ignore ID
+			expected.ID = ""                 // Ignore ID
 			expected.CreatedAt = time.Time{} // Ignore CreatedAt
 			expected.UpdatedAt = time.Time{} // Ignore UpdatedAt
-		
+
 			assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
 			assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
 			assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
