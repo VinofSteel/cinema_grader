@@ -54,7 +54,7 @@ func (u *UserModel) InsertUserInDB(db *sql.DB, userInfo UserBody) (UserResponse,
 }
 
 func (u *UserModel) GetUserByEmail(db *sql.DB, email string) (UserModel, error) {
-	log.Printf("Getting user with emal %s in DB... \n", email)
+	log.Printf("Getting user with email %s in DB... \n", email)
 
 	query := `SELECT id, name, surname, email, is_adm, created_at, updated_at, deleted_at FROM users WHERE email = $1`
 

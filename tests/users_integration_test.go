@@ -19,6 +19,11 @@ import (
 )
 
 var app *fiber.App
+var userModel models.UserModel
+type globalErrorHandlerResp struct {
+	Message string `json:"message"`
+}
+
 
 func TestMain(m *testing.M) {
 	var err error
@@ -32,6 +37,20 @@ func TestMain(m *testing.M) {
 	validate := initializers.NewValidator()
 	db := initializers.NewDatabaseConn()
 	defer db.Close()
+
+	// Inserting mocked user in DB for test
+	mockedUser := models.UserBody{
+		Name:     "Duplicate",
+		Surname:  "User",
+		Email:    "teste@teste.com",
+		Password: "testando123@Teste",
+		Birthday: "1990-10-10",
+	}
+
+	_, err = userModel.InsertUserInDB(db, mockedUser)
+	if err != nil {
+		log.Fatalf("Error inserting mocked users in Db: %v", err)
+	}
 
 	app = fiber.New()
 
@@ -61,9 +80,10 @@ func Test_UsersRoutes(t *testing.T) {
 		data             map[string]interface{}
 		expectedCode     int
 		expectedResponse interface{}
+		testType         string
 	}{
 		{
-			description: "POST - Create a new user route",
+			description: "POST - Create a new user route - Success Case",
 			route:       "/users",
 			method:      "POST",
 			data: map[string]interface{}{
@@ -80,6 +100,24 @@ func Test_UsersRoutes(t *testing.T) {
 				Email:    "astolfinho@astolfinho.com.br",
 				Birthday: "1990-10-10T00:00:00Z",
 			},
+			testType: "success",
+		},
+		{
+			description: "POST - User already exists in DB - Error Case",
+			route:       "/users",
+			method:      "POST",
+			data: map[string]interface{}{
+				"name":     "Duplicate",
+				"surname":  "User",
+				"email":    "teste@teste.com",
+				"password": "testando123@Teste",
+				"birthday": "1999-10-10",
+			},
+			expectedCode: 400,
+			expectedResponse: globalErrorHandlerResp{
+				Message: "User with this email already exists",
+			}, 
+			testType: "global-error",
 		},
 	}
 
@@ -116,23 +154,29 @@ func Test_UsersRoutes(t *testing.T) {
 		// Verifying status code
 		assert.Equal(t, testCase.expectedCode, resp.StatusCode, "status code")
 
-		// Unmarshallhing the responseBody into an actual struct
-		var respStruct models.UserResponse
-		if err := json.Unmarshal(responseBody, &respStruct); err != nil {
-			t.Fatalf("Error unmarshalling response body: %v", err)
+		if testCase.testType == "success" {
+			// Unmarshallhing the responseBody into an actual struct
+			var respStruct models.UserResponse
+			if err := json.Unmarshal(responseBody, &respStruct); err != nil {
+				t.Fatalf("Error unmarshalling response body: %v", err)
+			}
+			compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
+				expected.ID = ""                 // Ignore ID
+				expected.CreatedAt = time.Time{} // Ignore CreatedAt
+				expected.UpdatedAt = time.Time{} // Ignore UpdatedAt
+
+				assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
+				assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
+				assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
+				assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
+			}
+
+			compareUserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
 		}
 
-		compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
-			expected.ID = ""                 // Ignore ID
-			expected.CreatedAt = time.Time{} // Ignore CreatedAt
-			expected.UpdatedAt = time.Time{} // Ignore UpdatedAt
-
-			assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
-			assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
-			assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
-			assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
+		if testCase.testType == "global-error" {
+			assert.Equal(t, testCase.expectedResponse.(globalErrorHandlerResp).Message, string(responseBody))
 		}
 
-		compareUserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
 	}
 }
