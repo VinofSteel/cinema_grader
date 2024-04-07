@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/stretchr/testify/assert"
 )
 
 var passwordItems = []struct {
@@ -24,10 +25,10 @@ func Test_passwordValidation(t *testing.T) {
 	for _, item := range passwordItems {
 		err := validate.Var(item.have, "password")
 
-		if item.want && err != nil {
-			t.Errorf("Unexpected error: %v for item: %v", err, item)
-		} else if !item.want && err == nil {
-			t.Errorf("Expected error, but got nil for item: %v", item)
+		if item.want {
+			assert.NoError(t, err, "Unexpected error for item: %v", item)
+		} else {
+			assert.Error(t, err, "Expected error for item: %v", item)
 		}
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/VinOfSteel/cinemagrader/tests"
+	"github.com/stretchr/testify/assert"
 )
 
 var testDb string
@@ -37,11 +38,8 @@ func Test_NewDatabaseConn(t *testing.T) {
 	defer db.Close()
 
 	// Assert that the connection is not nil
-	if db == nil {
-		t.Errorf("Expected a non-nil database connection, got nil")
-	}
+	assert.NotNil(t, db, "Expected a non-nil database connection")
 
-	if err := db.Ping(); err != nil {
-		t.Errorf("Error pinging db to make sure it works: %v", err)
-	}
+	err := db.Ping()
+	assert.NoError(t, err, "Error pinging db to make sure it works: %v", err)
 }

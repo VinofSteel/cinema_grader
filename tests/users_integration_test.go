@@ -9,11 +9,13 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/VinOfSteel/cinemagrader/controllers"
 	"github.com/VinOfSteel/cinemagrader/initializers"
 	"github.com/VinOfSteel/cinemagrader/models"
 	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 var app *fiber.App
@@ -112,10 +114,7 @@ func Test_UsersRoutes(t *testing.T) {
 		}
 
 		// Verifying status code
-		if resp.StatusCode != testCase.expectedCode {
-			t.Errorf("got status code: %v", resp.StatusCode)
-			t.Errorf("want status code: %v", testCase.expectedCode)
-		}
+        assert.Equal(t, testCase.expectedCode, resp.StatusCode, "status code")
 
 		// Unmarshallhing the responseBody into an actual struct
 		var respStruct models.UserResponse
@@ -123,20 +122,17 @@ func Test_UsersRoutes(t *testing.T) {
 			t.Fatalf("Error unmarshalling response body: %v", err)
 		}
 
-		if testCase.expectedResponse.(models.UserResponse).Name != respStruct.Name {
-			t.Errorf("API response is different from expected response. Response: %v, Expected: %v", testCase.expectedResponse.(models.UserResponse).Name, respStruct.Name)
+		compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
+			expected.ID = "" // Ignore ID
+			expected.CreatedAt = time.Time{} // Ignore CreatedAt
+			expected.UpdatedAt = time.Time{} // Ignore UpdatedAt
+		
+			assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
+			assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
+			assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
+			assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
 		}
 
-		if testCase.expectedResponse.(models.UserResponse).Surname != respStruct.Surname {
-			t.Errorf("API response is different from expected response. Response: %v, Expected: %v", testCase.expectedResponse.(models.UserResponse).Surname, respStruct.Surname)
-		}
-
-		if testCase.expectedResponse.(models.UserResponse).Email != respStruct.Email {
-			t.Errorf("API response is different from expected response. Response: %v, Expected: %v", testCase.expectedResponse.(models.UserResponse).Email, respStruct.Email)
-		}
-
-		if testCase.expectedResponse.(models.UserResponse).Birthday != respStruct.Birthday {
-			t.Errorf("API response is different from expected response. Response: %v, Expected: %v", testCase.expectedResponse.(models.UserResponse).Birthday, respStruct.Birthday)
-		}
+		compareUserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
 	}
 }

@@ -2,11 +2,11 @@ package validation
 
 import (
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/VinOfSteel/cinemagrader/initializers"
 	"github.com/go-playground/validator/v10"
+	"github.com/stretchr/testify/assert"
 )
 
 var validate *validator.Validate
@@ -89,24 +89,7 @@ func Test_structValidation(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			got := structValidation(testCase.args.validate, testCase.args.data)
-			for i, err := range testCase.want {
-				funcResponse := got[i]
-
-				if i >= len(got) {
-					t.Fatalf("expected %d errors, got %d\n", len(testCase.want), len(got))
-				}
-
-				if !reflect.DeepEqual(err, funcResponse) {
-					t.Errorf("error at index %d: got %#v, want %#v\n", i, funcResponse, err)
-					t.Errorf("got error message: %q\n", err.ErrorMessage)
-					t.Errorf("want error message: %q\n", funcResponse.ErrorMessage)
-				}
-			}
-
-			if len(got) > len(testCase.want) {
-				t.Fatalf("expected %d errors, got %d", len(testCase.want), len(got))
-			}
-
+			assert.ElementsMatch(t, testCase.want, got, "error lists do not match")
 		})
 	}
 }
