@@ -79,7 +79,7 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 		}
 	}
 
-	c.Status(fiber.StatusOK).JSON(user)
+	c.Status(fiber.StatusCreated).JSON(user)
 	return nil
 }
 

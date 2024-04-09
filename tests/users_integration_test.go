@@ -60,6 +60,7 @@ func TestMain(m *testing.M) {
 	}
 
 	app.Post("/users", userController.CreateUser)
+	app.Get("/users", userController.GetAllUsers)
 
 	// Run tests
 	exitCode := m.Run()
@@ -81,8 +82,10 @@ func Test_UsersRoutes(t *testing.T) {
 		data             map[string]interface{}
 		expectedCode     int
 		expectedResponse interface{}
+		responseType 	 string
 		testType         string
 	}{
+		// Post requests
 		{
 			description: "POST - Create a new user route - Success Case",
 			route:       "/users",
@@ -94,7 +97,7 @@ func Test_UsersRoutes(t *testing.T) {
 				"password": "Astolfinho123@*",
 				"birthday": "1990-10-10",
 			},
-			expectedCode: 200,
+			expectedCode: 201,
 			expectedResponse: models.UserResponse{
 				Name:     "Astolfo",
 				Surname:  "O inho",
@@ -120,6 +123,30 @@ func Test_UsersRoutes(t *testing.T) {
 			},
 			testType: "global-error",
 		},
+		// Get requests
+		{
+			description: "GET - All users without query params",
+			route:       "/users",
+			method:      "GET",
+			expectedCode: 200,
+			expectedResponse: []models.UserResponse{
+				{
+					Name:     "Astolfo",
+					Surname:  "O inho",
+					Email:    "astolfinho@astolfinho.com.br",
+					Birthday: "1990-10-10T00:00:00Z",
+				},
+				{
+					Name:     "Duplicate",
+					Surname:  "User",
+					Email:    "teste@teste.com",
+					Birthday: "1990-10-10T00:00:00Z",
+				},
+			},
+			responseType: "slice",
+			testType: "success",
+		},
+
 	}
 
 	for _, testCase := range testCases {
@@ -158,21 +185,47 @@ func Test_UsersRoutes(t *testing.T) {
 		if testCase.testType == "success" {
 			// Unmarshallhing the responseBody into an actual struct
 			var respStruct models.UserResponse
-			if err := json.Unmarshal(responseBody, &respStruct); err != nil {
-				t.Fatalf("Error unmarshalling response body: %v", err)
-			}
-			compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
-				expected.ID = ""                 // Ignore ID
-				expected.CreatedAt = time.Time{} // Ignore CreatedAt
-				expected.UpdatedAt = time.Time{} // Ignore UpdatedAt
+			var respSlice []models.UserResponse
 
-				assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
-				assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
-				assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
-				assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
+			if testCase.responseType == "slice" {
+				if err := json.Unmarshal(responseBody, &respSlice); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			} else {
+				if err := json.Unmarshal(responseBody, &respStruct); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
 			}
 
-			compareUserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
+			if testCase.responseType == "slice" {
+				compareUserResponses := func(t *testing.T, expected, actual []models.UserResponse) {
+					for i, actResp := range actual {
+						expected[i].ID = ""                 // Ignore ID
+						expected[i].CreatedAt = time.Time{} // Ignore CreatedAt
+						expected[i].UpdatedAt = time.Time{} // Ignore UpdatedAt
+		
+						assert.Equal(t, expected[i].Name, actResp.Name, "Name mismatch")
+						assert.Equal(t, expected[i].Surname, actResp.Surname, "Surname mismatch")
+						assert.Equal(t, expected[i].Email, actResp.Email, "Email mismatch")
+						assert.Equal(t, expected[i].Birthday, actResp.Birthday, "Birthday mismatch")
+					}
+				}
+
+				compareUserResponses(t, testCase.expectedResponse.([]models.UserResponse), respSlice)
+			} else {
+				compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
+					expected.ID = ""                 // Ignore ID
+					expected.CreatedAt = time.Time{} // Ignore CreatedAt
+					expected.UpdatedAt = time.Time{} // Ignore UpdatedAt
+	
+					assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
+					assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
+					assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
+					assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
+				}
+
+				compareUserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
+			}
 		}
 
 		if testCase.testType == "global-error" {
