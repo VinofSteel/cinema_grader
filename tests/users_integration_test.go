@@ -20,10 +20,10 @@ import (
 
 var app *fiber.App
 var userModel models.UserModel
+
 type globalErrorHandlerResp struct {
 	Message string `json:"message"`
 }
-
 
 func TestMain(m *testing.M) {
 	var err error
@@ -117,7 +117,7 @@ func Test_UsersRoutes(t *testing.T) {
 			expectedCode: 400,
 			expectedResponse: globalErrorHandlerResp{
 				Message: "User with this email already exists",
-			}, 
+			},
 			testType: "global-error",
 		},
 	}

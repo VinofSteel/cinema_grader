@@ -3,6 +3,8 @@ package controllers
 import (
 	"database/sql"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/VinOfSteel/cinemagrader/models"
 	"github.com/VinOfSteel/cinemagrader/validation"
@@ -78,5 +80,69 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 	}
 
 	c.Status(fiber.StatusOK).JSON(user)
+	return nil
+}
+
+func (u *User) GetAllUsers(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+
+	// Query params
+	offset := c.Query("offset", "0")
+	limit := c.Query("limit", "10")
+	orderBy := c.Query("sort", "created,desc")
+
+	offsetInt, err := strconv.Atoi(offset)
+	if err != nil {
+		log.Println("Invalid offset value:", offset)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Offset needs to be a valid integer",
+		}
+	}
+
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		log.Println("Invalid limit value:", limit)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Limit needs to be a valid integer",
+		}
+	}
+
+	switch strings.ToLower(orderBy) {
+	case "created,asc":
+		orderBy = "created_at ASC"
+	case "created,desc":
+		orderBy = "created_at DESC"
+	case "name,asc":
+		orderBy = "name ASC"
+	case "name,desc":
+		orderBy = "name DESC"
+	case "surname,asc":
+		orderBy = "surname ASC"
+	case "surname,desc":
+		orderBy = "surname DESC"
+	case "email,asc":
+		orderBy = "email ASC"
+	case "email,desc":
+		orderBy = "email DESC"
+	case "updated,asc":
+		orderBy = "updated_at ASC"
+	default:
+		orderBy = "updated_at DESC"
+	}
+
+	usersList, err := UserModel.GetAllUsers(u.DB, offsetInt, limitInt, orderBy)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			log.Println("Error getting user by email:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusInternalServerError,
+				Message: "Unknown error",
+			}
+		}
+	}
+
+	c.Status(fiber.StatusOK).JSON(usersList)
 	return nil
 }

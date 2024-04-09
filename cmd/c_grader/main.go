@@ -47,6 +47,7 @@ func main() {
 
 	// Routes - User
 	app.Post("/users", userController.CreateUser)
+	app.Get("/users", userController.GetAllUsers)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }

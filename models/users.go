@@ -40,8 +40,10 @@ type UserResponse struct {
 func (u *UserModel) InsertUserInDB(db *sql.DB, userInfo UserBody) (UserResponse, error) {
 	log.Printf("Inserting user with email %s in DB...\n", userInfo.Email)
 
-	query := `INSERT INTO users(name, surname, email, password, birthday)
-              VALUES ($1, $2, $3, $4, $5) RETURNING id, name, surname, email, birthday, created_at, updated_at;`
+	query := `INSERT INTO users
+			(name, surname, email, password, birthday)
+            VALUES ($1, $2, $3, $4, $5) 
+			  	RETURNING id, name, surname, email, birthday, created_at, updated_at;`
 
 	var user UserResponse
 	err := db.QueryRow(query, userInfo.Name, userInfo.Surname, userInfo.Email, userInfo.Password, userInfo.Birthday).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt)
@@ -56,7 +58,10 @@ func (u *UserModel) InsertUserInDB(db *sql.DB, userInfo UserBody) (UserResponse,
 func (u *UserModel) GetUserByEmail(db *sql.DB, email string) (UserModel, error) {
 	log.Printf("Getting user with email %s in DB... \n", email)
 
-	query := `SELECT id, name, surname, email, is_adm, created_at, updated_at, deleted_at FROM users WHERE email = $1`
+	query := `SELECT 
+		id, name, surname, email, is_adm, created_at, updated_at, deleted_at 
+		FROM users 
+			WHERE email = $1;`
 
 	var user UserModel
 	err := db.QueryRow(query, email).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt)
@@ -66,4 +71,33 @@ func (u *UserModel) GetUserByEmail(db *sql.DB, email string) (UserModel, error) 
 	}
 
 	return user, nil
+}
+
+func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string) ([]UserResponse, error) {
+	log.Printf("Getting all users in DB, with offset %v, limit %v and orderBy %v...", offset, limit, orderBy)
+
+	query := `SELECT 
+		id, name, surname, email, birthday, created_at, updated_at 
+		FROM users 
+			WHERE deleted_at ISNULL 
+				ORDER BY ` + orderBy +
+				` OFFSET $1 LIMIT $2;`
+
+	rows, err := db.Query(query, offset, limit)
+	if err != nil {
+		log.Println("Error getting all users from db:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []UserResponse
+	for rows.Next() {
+		var user UserResponse
+		if err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
 }
