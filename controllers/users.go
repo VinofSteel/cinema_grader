@@ -167,7 +167,7 @@ func (u *User) GetUserById(c *fiber.Ctx) error {
 			log.Println("User id not found in database:", err)
 			return &fiber.Error{
 				Code:    fiber.StatusNotFound,
-				Message: "User id not found in database", 
+				Message: "User id not found in database",
 			}
 		}
 

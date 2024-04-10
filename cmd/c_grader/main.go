@@ -32,7 +32,13 @@ func main() {
 		WriteTimeout:  90 * time.Second,
 		IdleTimeout:   120 * time.Second,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			return c.Status(fiber.StatusBadRequest).JSON(GlobalErrorHandlerResp{
+			if fe, ok := err.(*fiber.Error); ok {
+				return c.Status(fe.Code).JSON(GlobalErrorHandlerResp{
+					Message: fe.Message,
+				})
+			}
+
+			return c.Status(fiber.StatusInternalServerError).JSON(GlobalErrorHandlerResp{
 				Message: err.Error(),
 			})
 		},
