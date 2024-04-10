@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -38,19 +39,44 @@ func TestMain(m *testing.M) {
 	db := initializers.NewDatabaseConn()
 	defer db.Close()
 
-	// Inserting mocked user in DB for test
-	mockedUser := models.UserBody{
-		Name:     "Duplicate",
-		Surname:  "User",
-		Email:    "teste@teste.com",
-		Password: "testando123@Teste",
-		Birthday: "1990-10-10",
+	// God, forgive me for what I'm about to do.
+	// Inserting mocked users in DB for test
+	usersToBeInsertedInDb := []models.UserBody{
+		{	
+			Name:     "Duplicate",
+			Surname:  "User",
+			Email:    "teste@teste.com",
+			Password: "testando123@Teste",
+			Birthday: "1990-10-10",
+		},
+		{	
+			Name:     "aaaaaa",
+			Surname:  "o a",
+			Email:    "teste1@teste1.com",
+			Password: "testando123@Teste",
+			Birthday: "1990-10-10",
+		},
+		{	
+			Name:     "bbbbbb",
+			Surname:  "o b",
+			Email:    "teste2@teste2.com",
+			Password: "testando123@Teste",
+			Birthday: "1990-10-10",
+		},
 	}
 
-	_, err = userModel.InsertUserInDB(db, mockedUser)
-	if err != nil {
-		log.Fatalf("Error inserting mocked users in Db: %v", err)
+	var wg sync.WaitGroup
+	for _, user := range usersToBeInsertedInDb {
+		wg.Add(1)
+		go func() { // This code is ass. Should make an insert function to insert multiple users in DB using SQL, but...
+			_, err = userModel.InsertUserInDB(db, user)
+			if err != nil {
+				log.Fatalf("Error inserting mocked user with email %v in Db: %v", user.Email, err)
+			}
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 
 	app = fiber.New()
 
@@ -125,15 +151,21 @@ func Test_UsersRoutes(t *testing.T) {
 		},
 		// Get requests
 		{
-			description: "GET - All users without query params",
-			route:       "/users",
+			description: "GET - All users with basic query params - Success Case", // We don't do gigantic offsets and limits to not need to mock 10 things
+			route:       "/users?offset=1&limit=3&sort=name,asc",
 			method:      "GET",
 			expectedCode: 200,
 			expectedResponse: []models.UserResponse{
 				{
-					Name:     "Astolfo",
+					Name:     "Astolfo", // Since this user is created in the POST request, commenting the other tests will net this one a failure. Too bad!
 					Surname:  "O inho",
 					Email:    "astolfinho@astolfinho.com.br",
+					Birthday: "1990-10-10T00:00:00Z",
+				},
+				{	
+					Name:     "bbbbbb",
+					Surname:  "o b",
+					Email:    "teste2@teste2.com",
 					Birthday: "1990-10-10T00:00:00Z",
 				},
 				{
@@ -146,7 +178,28 @@ func Test_UsersRoutes(t *testing.T) {
 			responseType: "slice",
 			testType: "success",
 		},
-
+		{
+			description: "GET - Passing an offset that is not a number - Error Case",
+			route:       "/users?offset=2.254",
+			method:      "GET",
+			expectedCode: 400,
+			expectedResponse: globalErrorHandlerResp{
+				Message: "Offset needs to be a valid integer",
+			},
+			responseType: "slice",
+			testType: "global-error",
+		},
+		{
+			description: "GET - Passing a limit that is not a number - Error Case",
+			route:       "/users?limit=aushaushaush",
+			method:      "GET",
+			expectedCode: 400,
+			expectedResponse: globalErrorHandlerResp{
+				Message: "Limit needs to be a valid integer",
+			},
+			responseType: "slice",
+			testType: "global-error",
+		}, // Since sort casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
 	}
 
 	for _, testCase := range testCases {
