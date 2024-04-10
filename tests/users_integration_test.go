@@ -16,6 +16,7 @@ import (
 	"github.com/VinOfSteel/cinemagrader/initializers"
 	"github.com/VinOfSteel/cinemagrader/models"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,21 +43,21 @@ func TestMain(m *testing.M) {
 	// God, forgive me for what I'm about to do.
 	// Inserting mocked users in DB for test
 	usersToBeInsertedInDb := []models.UserBody{
-		{	
+		{
 			Name:     "Duplicate",
 			Surname:  "User",
 			Email:    "teste@teste.com",
 			Password: "testando123@Teste",
 			Birthday: "1990-10-10",
 		},
-		{	
+		{
 			Name:     "aaaaaa",
 			Surname:  "o a",
 			Email:    "teste1@teste1.com",
 			Password: "testando123@Teste",
 			Birthday: "1990-10-10",
 		},
-		{	
+		{
 			Name:     "bbbbbb",
 			Surname:  "o b",
 			Email:    "teste2@teste2.com",
@@ -108,7 +109,7 @@ func Test_UsersRoutes(t *testing.T) {
 		data             map[string]interface{}
 		expectedCode     int
 		expectedResponse interface{}
-		responseType 	 string
+		responseType     string
 		testType         string
 	}{
 		// Post requests
@@ -151,9 +152,9 @@ func Test_UsersRoutes(t *testing.T) {
 		},
 		// Get requests
 		{
-			description: "GET - All users with basic query params - Success Case", // We don't do gigantic offsets and limits to not need to mock 10 things
-			route:       "/users?offset=1&limit=3&sort=name,asc",
-			method:      "GET",
+			description:  "GET - All users with basic query params - Success Case", // We don't do gigantic offsets and limits to not need to mock 10 things
+			route:        "/users?offset=1&limit=3&sort=name,asc",
+			method:       "GET",
 			expectedCode: 200,
 			expectedResponse: []models.UserResponse{
 				{
@@ -162,7 +163,7 @@ func Test_UsersRoutes(t *testing.T) {
 					Email:    "astolfinho@astolfinho.com.br",
 					Birthday: "1990-10-10T00:00:00Z",
 				},
-				{	
+				{
 					Name:     "bbbbbb",
 					Surname:  "o b",
 					Email:    "teste2@teste2.com",
@@ -176,29 +177,29 @@ func Test_UsersRoutes(t *testing.T) {
 				},
 			},
 			responseType: "slice",
-			testType: "success",
+			testType:     "success",
 		},
 		{
-			description: "GET - Passing an offset that is not a number - Error Case",
-			route:       "/users?offset=2.254",
-			method:      "GET",
+			description:  "GET - Passing an offset that is not a number - Error Case",
+			route:        "/users?offset=2.254",
+			method:       "GET",
 			expectedCode: 400,
 			expectedResponse: globalErrorHandlerResp{
 				Message: "Offset needs to be a valid integer",
 			},
 			responseType: "slice",
-			testType: "global-error",
+			testType:     "global-error",
 		},
 		{
-			description: "GET - Passing a limit that is not a number - Error Case",
-			route:       "/users?limit=aushaushaush",
-			method:      "GET",
+			description:  "GET - Passing a limit that is not a number - Error Case",
+			route:        "/users?limit=aushaushaush",
+			method:       "GET",
 			expectedCode: 400,
 			expectedResponse: globalErrorHandlerResp{
 				Message: "Limit needs to be a valid integer",
 			},
 			responseType: "slice",
-			testType: "global-error",
+			testType:     "global-error",
 		}, // Since sort casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
 	}
 
@@ -253,10 +254,10 @@ func Test_UsersRoutes(t *testing.T) {
 			if testCase.responseType == "slice" {
 				compareUserResponses := func(t *testing.T, expected, actual []models.UserResponse) {
 					for i, actResp := range actual {
-						expected[i].ID = ""                 // Ignore ID
+						expected[i].ID = uuid.Nil           // Ignore ID
 						expected[i].CreatedAt = time.Time{} // Ignore CreatedAt
 						expected[i].UpdatedAt = time.Time{} // Ignore UpdatedAt
-		
+
 						assert.Equal(t, expected[i].Name, actResp.Name, "Name mismatch")
 						assert.Equal(t, expected[i].Surname, actResp.Surname, "Surname mismatch")
 						assert.Equal(t, expected[i].Email, actResp.Email, "Email mismatch")
@@ -267,10 +268,10 @@ func Test_UsersRoutes(t *testing.T) {
 				compareUserResponses(t, testCase.expectedResponse.([]models.UserResponse), respSlice)
 			} else {
 				compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
-					expected.ID = ""                 // Ignore ID
+					expected.ID = uuid.Nil           // Ignore ID
 					expected.CreatedAt = time.Time{} // Ignore CreatedAt
 					expected.UpdatedAt = time.Time{} // Ignore UpdatedAt
-	
+
 					assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
 					assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
 					assert.Equal(t, expected.Email, actual.Email, "Email mismatch")

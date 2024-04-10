@@ -10,6 +10,7 @@ import (
 	"github.com/VinOfSteel/cinemagrader/validation"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -51,7 +52,7 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 		}
 	}
 
-	if existingUser.ID != "" {
+	if existingUser.ID != uuid.Nil {
 		log.Println("Trying to create user with existing email in db")
 		return &fiber.Error{
 			Code:    fiber.StatusBadRequest,
@@ -144,5 +145,39 @@ func (u *User) GetAllUsers(c *fiber.Ctx) error {
 	}
 
 	c.Status(fiber.StatusOK).JSON(usersList)
+	return nil
+}
+
+func (u *User) GetUserById(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	userInDb, err := UserModel.GetUserById(u.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("User id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "User id not found in database", 
+			}
+		}
+
+		log.Println("Error getting user by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	c.Status(fiber.StatusOK).JSON(userInDb)
 	return nil
 }
