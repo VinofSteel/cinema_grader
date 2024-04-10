@@ -315,8 +315,6 @@ func Test_UsersRoutes(t *testing.T) {
 						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
 						assert.NotEqual(t, time.Time{}, actResp.UpdatedAt, "UpdatedAt should not be nil")
 
-						// If you want to be more specific, you can compare individual user details
-						// Find the corresponding user details in userResponses by name, surname, or email
 						for _, user := range userResponses {
 							if user.Name == actResp.Name && user.Surname == actResp.Surname && user.Email == actResp.Email {
 								// Asserting ID, createdAt, and updatedAt
@@ -345,8 +343,6 @@ func Test_UsersRoutes(t *testing.T) {
 					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.UpdatedAt, "UpdatedAt should not be nil")
 
-					// If you want to be more specific, you can compare individual user details
-					// Find the corresponding user details in userResponses by name, surname, or email
 					for _, user := range userResponses {
 						if user.Name == actual.Name && user.Surname == actual.Surname && user.Email == actual.Email {
 							// Asserting ID, createdAt, and updatedAt
