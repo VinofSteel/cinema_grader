@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -22,6 +23,7 @@ import (
 
 var app *fiber.App
 var userModel models.UserModel
+var userResponses []models.UserResponse
 
 type globalErrorHandlerResp struct {
 	Message string `json:"message"`
@@ -66,18 +68,32 @@ func TestMain(m *testing.M) {
 		},
 	}
 
-	var wg sync.WaitGroup
-	for _, user := range usersToBeInsertedInDb {
-		wg.Add(1)
-		go func() { // This code is ass. Should make an insert function to insert multiple users in DB using SQL, but...
-			_, err = userModel.InsertUserInDB(db, user)
-			if err != nil {
-				log.Fatalf("Error inserting mocked user with email %v in Db: %v", user.Email, err)
-			}
-			wg.Done()
-		}()
-	}
-	wg.Wait()
+	// Creating a channel to store all the responses of the insertion in the DB so I can check user uuids in tests and pass them on.
+	var wg sync.WaitGroup // Using a waitgroup to make it easier to know when to close the channel.
+	userResponseChannel := make(chan models.UserResponse, len(usersToBeInsertedInDb))
+    for _, user := range usersToBeInsertedInDb {
+        wg.Add(1) // This whole code is ass.
+        go func(user models.UserBody) {
+            defer wg.Done()
+            insertedUser, err := userModel.InsertUserInDB(db, user)
+            if err != nil {
+                log.Fatalf("Error inserting mocked user with email %v in Db: %v", user.Email, err)
+            }
+            userResponseChannel <- insertedUser
+        }(user)
+    }
+	
+	// Waiting for all goroutines to finish and closing channel
+	go func() {
+        wg.Wait()
+        close(userResponseChannel)
+    }()
+
+	for user := range userResponseChannel {
+        userResponses = append(userResponses, user)
+    }
+	// You know when you do something to not have to do another thing to save time and you end up wasting more time than you would have if you just did the original thing?
+	// Yeah. There's no conclusion here.
 
 	app = fiber.New()
 
@@ -88,6 +104,7 @@ func TestMain(m *testing.M) {
 
 	app.Post("/users", userController.CreateUser)
 	app.Get("/users", userController.GetAllUsers)
+	app.Get("/users/:uuid", userController.GetUserById)
 
 	// Run tests
 	exitCode := m.Run()
@@ -200,7 +217,38 @@ func Test_UsersRoutes(t *testing.T) {
 			},
 			responseType: "slice",
 			testType:     "global-error",
-		}, // Since sort casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
+		},
+		{
+			description:  "GET BY ID - Passing a uuid that does not exist in DB - Success Case",
+			route:        fmt.Sprintf("/users/%v", userResponses[1].ID),
+			method:       "GET",
+			expectedCode: 200,
+			expectedResponse: userResponses[1],
+			responseType: "struct",
+			testType:     "success",
+		},
+		{
+			description:  "GET BY ID - Passing a uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/users/%v", uuid.New()),
+			method:       "GET",
+			expectedCode: 404,
+			expectedResponse: globalErrorHandlerResp{
+				Message: "User id not found in database",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
+		{
+			description:  "GET BY ID - Passing an invalid uuid - Error Case",
+			route:        "/users/as9du9u192ejs",
+			method:       "GET",
+			expectedCode: 400,
+			expectedResponse: globalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -237,10 +285,10 @@ func Test_UsersRoutes(t *testing.T) {
 		assert.Equal(t, testCase.expectedCode, resp.StatusCode, "status code")
 
 		if testCase.testType == "success" {
-			// Unmarshallhing the responseBody into an actual struct
+			// Unmarshalling the responseBody into an actual struct
 			var respStruct models.UserResponse
 			var respSlice []models.UserResponse
-
+		
 			if testCase.responseType == "slice" {
 				if err := json.Unmarshal(responseBody, &respSlice); err != nil {
 					t.Fatalf("Error unmarshalling response body: %v", err)
@@ -250,32 +298,64 @@ func Test_UsersRoutes(t *testing.T) {
 					t.Fatalf("Error unmarshalling response body: %v", err)
 				}
 			}
-
+		
 			if testCase.responseType == "slice" {
 				compareUserResponses := func(t *testing.T, expected, actual []models.UserResponse) {
 					for i, actResp := range actual {
-						expected[i].ID = uuid.Nil           // Ignore ID
-						expected[i].CreatedAt = time.Time{} // Ignore CreatedAt
-						expected[i].UpdatedAt = time.Time{} // Ignore UpdatedAt
-
+						expected[i].ID = uuid.Nil // Ignore ID
+		
+						// Asserting other fields
 						assert.Equal(t, expected[i].Name, actResp.Name, "Name mismatch")
 						assert.Equal(t, expected[i].Surname, actResp.Surname, "Surname mismatch")
 						assert.Equal(t, expected[i].Email, actResp.Email, "Email mismatch")
 						assert.Equal(t, expected[i].Birthday, actResp.Birthday, "Birthday mismatch")
+		
+						// Asserting ID, createdAt, and updatedAt
+						assert.NotEqual(t, uuid.Nil, actResp.ID, "ID should not be nil")
+						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
+						assert.NotEqual(t, time.Time{}, actResp.UpdatedAt, "UpdatedAt should not be nil")
+		
+						// If you want to be more specific, you can compare individual user details
+						// Find the corresponding user details in userResponses by name, surname, or email
+						for _, user := range userResponses {
+							if user.Name == actResp.Name && user.Surname == actResp.Surname && user.Email == actResp.Email {
+								// Asserting ID, createdAt, and updatedAt
+								assert.Equal(t, user.ID, actResp.ID, "ID mismatch")
+								assert.Equal(t, user.CreatedAt.UTC(), actResp.CreatedAt, "CreatedAt mismatch")
+								assert.Equal(t, user.UpdatedAt.UTC(), actResp.UpdatedAt, "UpdatedAt mismatch")
+								break
+							}
+						}
 					}
 				}
-
+		
 				compareUserResponses(t, testCase.expectedResponse.([]models.UserResponse), respSlice)
 			} else {
 				compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
-					expected.ID = uuid.Nil           // Ignore ID
-					expected.CreatedAt = time.Time{} // Ignore CreatedAt
-					expected.UpdatedAt = time.Time{} // Ignore UpdatedAt
-
+					expected.ID = uuid.Nil // Ignore ID
+		
+					// Asserting other fields
 					assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
 					assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
 					assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
 					assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
+		
+					// Asserting ID, createdAt, and updatedAt
+					assert.NotEqual(t, uuid.Nil, actual.ID, "ID should not be nil")
+					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")
+					assert.NotEqual(t, time.Time{}, actual.UpdatedAt, "UpdatedAt should not be nil")
+		
+					// If you want to be more specific, you can compare individual user details
+					// Find the corresponding user details in userResponses by name, surname, or email
+					for _, user := range userResponses {
+						if user.Name == actual.Name && user.Surname == actual.Surname && user.Email == actual.Email {
+							// Asserting ID, createdAt, and updatedAt
+							assert.Equal(t, user.ID, actual.ID, "ID mismatch")
+							assert.Equal(t, user.CreatedAt.UTC(), actual.CreatedAt, "CreatedAt mismatch")
+							assert.Equal(t, user.UpdatedAt.UTC(), actual.UpdatedAt, "UpdatedAt mismatch")
+							break
+						}
+					}
 				}
 
 				compareUserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
