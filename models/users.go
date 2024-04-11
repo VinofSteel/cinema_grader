@@ -61,12 +61,12 @@ func (u *UserModel) GetUserByEmail(db *sql.DB, email string) (UserModel, error) 
 	log.Printf("Getting user with email %s in DB... \n", email)
 
 	query := `SELECT 
-		id, name, surname, email, is_adm, created_at, updated_at, deleted_at 
+		id, name, surname, email, password, is_adm, created_at, updated_at, deleted_at 
 		FROM users 
 			WHERE email = $1;`
 
 	var user UserModel
-	err := db.QueryRow(query, email).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt)
+	err := db.QueryRow(query, email).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Password, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt)
 	if err != nil {
 		log.Printf("Error getting user by email: %v\n", err)
 		return UserModel{}, err

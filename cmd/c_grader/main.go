@@ -51,10 +51,18 @@ func main() {
 		Validate: validate,
 	}
 
+	sessionController := controllers.Session{
+		DB:       db,
+		Validate: validate,
+	}
+
 	// Routes - User
 	app.Post("/users", userController.CreateUser)
 	app.Get("/users", userController.GetAllUsers)
 	app.Get("/users/:uuid", userController.GetUserById)
+
+	// Routes - Login
+	app.Post("/login", sessionController.HandleLogin)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }
