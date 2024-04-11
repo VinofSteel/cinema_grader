@@ -43,23 +43,21 @@ func createToken(uuid uuid.UUID, email string, isAdm bool) (string, error) {
 	return tokenString, nil
 }
 
-func (s *Session) VerifyToken(tokenString string) error {
+func (s *Session) VerifyToken(tokenString string) (jwt.MapClaims, error) {
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("SECRET_KEY")), nil
 	})
 
-	log.Println("Claims in VerifyToken function:", claims)
-
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !token.Valid {
-		return fmt.Errorf("invalid token")
+		return nil, fmt.Errorf("invalid token")
 	}
 
-	return nil
+	return claims, nil
 }
 
 func (s *Session) HandleLogin(c *fiber.Ctx) error {
@@ -98,8 +96,6 @@ func (s *Session) HandleLogin(c *fiber.Ctx) error {
 		}
 	}
 
-	log.Println(existingUser, "EXISTING USER")
-
 	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(loginData.Password)); err != nil {
 		log.Println("Password does not match:", err)
 		return &fiber.Error{
@@ -118,9 +114,9 @@ func (s *Session) HandleLogin(c *fiber.Ctx) error {
 	}
 
 	cookie := new(fiber.Cookie)
-	cookie.Name = "auth-token"
+	cookie.Name = "Authorization"
 	cookie.Value = token
-	cookie.Secure = true
+	cookie.Secure = false // We only leave this as false because this API only runs on localhost, for real applications, this would be true.
 	cookie.HTTPOnly = true
 	cookie.Expires = time.Now().Add(time.Hour * 24 * 30)
 

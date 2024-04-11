@@ -8,6 +8,7 @@ import (
 
 	"github.com/VinOfSteel/cinemagrader/controllers"
 	"github.com/VinOfSteel/cinemagrader/initializers"
+	"github.com/VinOfSteel/cinemagrader/middleware"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -58,7 +59,7 @@ func main() {
 
 	// Routes - User
 	app.Post("/users", userController.CreateUser)
-	app.Get("/users", userController.GetAllUsers)
+	app.Get("/users", middleware.VerifyAdmin, userController.GetAllUsers)
 	app.Get("/users/:uuid", userController.GetUserById)
 
 	// Routes - Login
