@@ -6,11 +6,14 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"sync"
 
+	"github.com/VinOfSteel/cinemagrader/models"
 	"github.com/joho/godotenv"
 )
 
 var testDb string
+var UserModel models.UserModel
 
 func Setup() (string, error) {
 	// Initializing env variables
@@ -91,4 +94,26 @@ func Teardown() error {
 	}
 
 	return nil
+}
+
+// God, forgive me for what I'm about to do
+func InsertMockedUsersInDb(db *sql.DB, users []models.UserBody, respChan *chan models.UserResponse) {
+	var wg sync.WaitGroup
+	
+	for _, user := range users {
+		wg.Add(1)
+		go func(user models.UserBody) {
+			defer wg.Done()
+			userResp, err := UserModel.InsertUserInDB(db, user)
+			if err != nil {
+				log.Fatalf("Error inserting mocked user with email %v in Db: %v", user.Email, err)
+			}
+			*respChan <- userResp
+		}(user)
+	}
+
+	wg.Wait()
+	close(*respChan)
+	// You know when you do something to not have to do another thing to save time and you end up wasting more time than you would have if you just did the original thing?
+	// Yeah.
 }

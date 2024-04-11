@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -69,31 +68,12 @@ func TestMain(m *testing.M) {
 	}
 
 	// Creating a channel to store all the responses of the insertion in the DB so I can check user uuids in tests and pass them on.
-	var wg sync.WaitGroup // Using a waitgroup to make it easier to know when to close the channel.
 	userResponseChannel := make(chan models.UserResponse, len(usersToBeInsertedInDb))
-	for _, user := range usersToBeInsertedInDb {
-		wg.Add(1) // This whole code is ass.
-		go func(user models.UserBody) {
-			defer wg.Done()
-			insertedUser, err := userModel.InsertUserInDB(db, user)
-			if err != nil {
-				log.Fatalf("Error inserting mocked user with email %v in Db: %v", user.Email, err)
-			}
-			userResponseChannel <- insertedUser
-		}(user)
-	}
-
-	// Waiting for all goroutines to finish and closing channel
-	go func() {
-		wg.Wait()
-		close(userResponseChannel)
-	}()
+	InsertMockedUsersInDb(db, usersToBeInsertedInDb, &userResponseChannel)
 
 	for user := range userResponseChannel {
 		userResponses = append(userResponses, user)
 	}
-	// You know when you do something to not have to do another thing to save time and you end up wasting more time than you would have if you just did the original thing?
-	// Yeah. There's no conclusion here.
 
 	app = fiber.New()
 
