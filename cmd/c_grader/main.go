@@ -60,7 +60,7 @@ func main() {
 	// Routes - User
 	app.Post("/users", userController.CreateUser)
 	app.Get("/users", middleware.VerifyAdmin, userController.GetAllUsers)
-	app.Get("/users/:uuid", userController.GetUserById)
+	app.Get("/users/:uuid", middleware.VerifyUserOrAdmin, userController.GetUserById)
 
 	// Routes - Login
 	app.Post("/login", sessionController.HandleLogin)
