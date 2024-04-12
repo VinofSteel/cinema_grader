@@ -29,41 +29,41 @@ func Test_SessionsRoutes(t *testing.T) {
 		// Post requests
 		{
 			description: "POST - Login with an existing user - Sucess Case",
-			route: "/login",
-			method: "POST",
-			data: map[string]interface{} {
-				"email": "teste1@teste1.com",
+			route:       "/login",
+			method:      "POST",
+			data: map[string]interface{}{
+				"email":    "teste1@teste1.com",
 				"password": "testando123@Teste",
 			},
 			expectedCode: 204,
-			testType: "success",
+			testType:     "success",
 		},
 		{
 			description: "POST - Login with wrong password - Error Case",
-			route: "/login",
-			method: "POST",
-			data: map[string]interface{} {
-				"email": "teste1@teste1.com",
+			route:       "/login",
+			method:      "POST",
+			data: map[string]interface{}{
+				"email":    "teste1@teste1.com",
 				"password": "EuGostode123@@",
 			},
 			expectedCode: 400,
 			expectedResponse: GlobalErrorHandlerResp{
 				Message: "Invalid email/password",
-			}, 
+			},
 			testType: "global-error",
 		},
 		{
 			description: "POST - Login with unexistant email in DB - Error Case",
-			route: "/login",
-			method: "POST",
-			data: map[string]interface{} {
-				"email": "batatinha@tsdasde1.com",
+			route:       "/login",
+			method:      "POST",
+			data: map[string]interface{}{
+				"email":    "batatinha@tsdasde1.com",
 				"password": "EuGostode123@@",
 			},
 			expectedCode: 400,
 			expectedResponse: GlobalErrorHandlerResp{
 				Message: "Invalid email/password",
-			}, 
+			},
 			testType: "global-error",
 		},
 	}
@@ -103,8 +103,8 @@ func Test_SessionsRoutes(t *testing.T) {
 
 		if testCase.testType == "success" {
 			cookies := resp.Cookies()
-            assert.Len(t, cookies, 1, "unexpected number of cookies")
-            assert.Equal(t, "Authorization", cookies[0].Name, "unexpected cookie name")
+			assert.Len(t, cookies, 1, "unexpected number of cookies")
+			assert.Equal(t, "Authorization", cookies[0].Name, "unexpected cookie name")
 		}
 
 		if testCase.testType == "global-error" {

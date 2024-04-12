@@ -17,7 +17,7 @@ import (
 var App *fiber.App
 var TestDb string
 var UserModel models.UserModel
-var UserResponses []models.UserResponse
+
 type GlobalErrorHandlerResp struct {
 	Message string `json:"message"`
 }
@@ -104,14 +104,15 @@ func Teardown() error {
 }
 
 // God, forgive me for what I'm about to do
-func InsertMockedUsersInDb(db *sql.DB, users []models.UserBody, respChan *chan models.UserResponse) {
+func InsertMockedUsersInDb(db *sql.DB, users []models.UserBody) []models.UserResponse {
 	var wg sync.WaitGroup
-	
+	var respChan = make(chan models.UserResponse, len(users))
+
 	for _, user := range users {
 		wg.Add(1)
 		go func(user models.UserBody) {
 			defer wg.Done()
-			
+
 			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 12)
 			if err != nil {
 				log.Fatal("Error encrypting user's password:", err)
@@ -122,12 +123,19 @@ func InsertMockedUsersInDb(db *sql.DB, users []models.UserBody, respChan *chan m
 			if err != nil {
 				log.Fatalf("Error inserting mocked user with email %v in Db: %v", user.Email, err)
 			}
-			*respChan <- userResp
+			respChan <- userResp
 		}(user)
 	}
 
 	wg.Wait()
-	close(*respChan)
+	close(respChan)
 	// You know when you do something to not have to do another thing to save time and you end up wasting more time than you would have if you just did the original thing?
 	// Yeah.
+
+	var output []models.UserResponse
+	for user := range respChan {
+		output = append(output, user)
+	}
+
+	return output
 }

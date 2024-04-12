@@ -20,6 +20,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var userResponses []models.UserResponse
+
 func TestMain(m *testing.M) {
 	var err error
 	TestDb, err = Setup()
@@ -59,13 +61,8 @@ func TestMain(m *testing.M) {
 		},
 	}
 
-	// Creating a channel to store all the responses of the insertion in the DB so I can check user uuids in tests and pass them on.
-	userResponseChannel := make(chan models.UserResponse, len(usersToBeInsertedInDb))
-	InsertMockedUsersInDb(db, usersToBeInsertedInDb, &userResponseChannel)
-
-	for user := range userResponseChannel {
-		UserResponses = append(UserResponses, user)
-	}
+	// Maybe make this return the slice with the user responses?
+	userResponses = InsertMockedUsersInDb(db, usersToBeInsertedInDb)
 
 	App = fiber.New()
 
@@ -201,10 +198,10 @@ func Test_UsersRoutes(t *testing.T) {
 		}, // Since sort casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
 		{
 			description:      "GET BY ID - Passing a uuid that does not exist in DB - Success Case",
-			route:            fmt.Sprintf("/users/%v", UserResponses[1].ID),
+			route:            fmt.Sprintf("/users/%v", userResponses[1].ID),
 			method:           "GET",
 			expectedCode:     200,
-			expectedResponse: UserResponses[1],
+			expectedResponse: userResponses[1],
 			responseType:     "struct",
 			testType:         "success",
 		},
@@ -296,7 +293,7 @@ func Test_UsersRoutes(t *testing.T) {
 						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
 						assert.NotEqual(t, time.Time{}, actResp.UpdatedAt, "UpdatedAt should not be nil")
 
-						for _, user := range UserResponses {
+						for _, user := range userResponses {
 							if user.Name == actResp.Name && user.Surname == actResp.Surname && user.Email == actResp.Email {
 								// Asserting ID, createdAt, and updatedAt
 								assert.Equal(t, user.ID, actResp.ID, "ID mismatch")
@@ -324,7 +321,7 @@ func Test_UsersRoutes(t *testing.T) {
 					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.UpdatedAt, "UpdatedAt should not be nil")
 
-					for _, user := range UserResponses {
+					for _, user := range userResponses {
 						if user.Name == actual.Name && user.Surname == actual.Surname && user.Email == actual.Email {
 							// Asserting ID, createdAt, and updatedAt
 							assert.Equal(t, user.ID, actual.ID, "ID mismatch")
