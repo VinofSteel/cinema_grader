@@ -9,11 +9,18 @@ import (
 	"sync"
 
 	"github.com/VinOfSteel/cinemagrader/models"
+	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 )
 
-var testDb string
+var App *fiber.App
+var TestDb string
 var UserModel models.UserModel
+var UserResponses []models.UserResponse
+type GlobalErrorHandlerResp struct {
+	Message string `json:"message"`
+}
 
 func Setup() (string, error) {
 	// Initializing env variables
@@ -36,7 +43,7 @@ func Setup() (string, error) {
 			b = append(b, letterBytes[rand.Intn(len(letterBytes))])
 		}
 
-		testDb = string(b)
+		TestDb = string(b)
 	}()
 
 	var (
@@ -57,11 +64,11 @@ func Setup() (string, error) {
 	defer db.Close()
 
 	// Create test database
-	if _, err := db.Exec("CREATE DATABASE " + testDb + ";"); err != nil {
+	if _, err := db.Exec("CREATE DATABASE " + TestDb + ";"); err != nil {
 		return "", fmt.Errorf("error creating test database: %v", err)
 	}
 
-	return testDb, nil
+	return TestDb, nil
 }
 
 func Teardown() error {
@@ -71,7 +78,7 @@ func Teardown() error {
 		password string = os.Getenv("PGPASSWORD")
 		host     string = os.Getenv("PGHOST")
 		port     string = os.Getenv("PGPORT")
-		dbName   string = testDb
+		dbName   string = TestDb
 	)
 
 	// Connect to PostgreSQL
@@ -104,6 +111,13 @@ func InsertMockedUsersInDb(db *sql.DB, users []models.UserBody, respChan *chan m
 		wg.Add(1)
 		go func(user models.UserBody) {
 			defer wg.Done()
+			
+			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 12)
+			if err != nil {
+				log.Fatal("Error encrypting user's password:", err)
+			}
+			user.Password = string(hashedPassword)
+
 			userResp, err := UserModel.InsertUserInDB(db, user)
 			if err != nil {
 				log.Fatalf("Error inserting mocked user with email %v in Db: %v", user.Email, err)

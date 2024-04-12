@@ -20,22 +20,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var app *fiber.App
-var userModel models.UserModel
-var userResponses []models.UserResponse
-
-type globalErrorHandlerResp struct {
-	Message string `json:"message"`
-}
-
 func TestMain(m *testing.M) {
 	var err error
-	testDb, err = Setup()
+	TestDb, err = Setup()
 	if err != nil {
 		log.Fatalf("Error setting up tests: %v", err)
 	}
 
-	os.Setenv("PGDATABASE", testDb)
+	os.Setenv("PGDATABASE", TestDb)
 
 	validate := initializers.NewValidator()
 	db := initializers.NewDatabaseConn()
@@ -72,19 +64,28 @@ func TestMain(m *testing.M) {
 	InsertMockedUsersInDb(db, usersToBeInsertedInDb, &userResponseChannel)
 
 	for user := range userResponseChannel {
-		userResponses = append(userResponses, user)
+		UserResponses = append(UserResponses, user)
 	}
 
-	app = fiber.New()
+	App = fiber.New()
 
 	userController := controllers.User{
 		DB:       db,
 		Validate: validate,
 	}
 
-	app.Post("/users", userController.CreateUser)
-	app.Get("/users", userController.GetAllUsers)
-	app.Get("/users/:uuid", userController.GetUserById)
+	sessionController := controllers.Session{
+		DB:       db,
+		Validate: validate,
+	}
+
+	// Routes - User
+	App.Post("/users", userController.CreateUser)
+	App.Get("/users", userController.GetAllUsers)
+	App.Get("/users/:uuid", userController.GetUserById)
+
+	// Routes - Login
+	App.Post("/login", sessionController.HandleLogin)
 
 	// Run tests
 	exitCode := m.Run()
@@ -142,7 +143,7 @@ func Test_UsersRoutes(t *testing.T) {
 				"birthday": "1999-10-10",
 			},
 			expectedCode: 400,
-			expectedResponse: globalErrorHandlerResp{
+			expectedResponse: GlobalErrorHandlerResp{
 				Message: "User with this email already exists",
 			},
 			testType: "global-error",
@@ -181,7 +182,7 @@ func Test_UsersRoutes(t *testing.T) {
 			route:        "/users?offset=2.254",
 			method:       "GET",
 			expectedCode: 400,
-			expectedResponse: globalErrorHandlerResp{
+			expectedResponse: GlobalErrorHandlerResp{
 				Message: "Offset needs to be a valid integer",
 			},
 			responseType: "slice",
@@ -192,7 +193,7 @@ func Test_UsersRoutes(t *testing.T) {
 			route:        "/users?limit=aushaushaush",
 			method:       "GET",
 			expectedCode: 400,
-			expectedResponse: globalErrorHandlerResp{
+			expectedResponse: GlobalErrorHandlerResp{
 				Message: "Limit needs to be a valid integer",
 			},
 			responseType: "slice",
@@ -200,10 +201,10 @@ func Test_UsersRoutes(t *testing.T) {
 		}, // Since sort casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
 		{
 			description:      "GET BY ID - Passing a uuid that does not exist in DB - Success Case",
-			route:            fmt.Sprintf("/users/%v", userResponses[1].ID),
+			route:            fmt.Sprintf("/users/%v", UserResponses[1].ID),
 			method:           "GET",
 			expectedCode:     200,
-			expectedResponse: userResponses[1],
+			expectedResponse: UserResponses[1],
 			responseType:     "struct",
 			testType:         "success",
 		},
@@ -212,7 +213,7 @@ func Test_UsersRoutes(t *testing.T) {
 			route:        fmt.Sprintf("/users/%v", uuid.New()),
 			method:       "GET",
 			expectedCode: 404,
-			expectedResponse: globalErrorHandlerResp{
+			expectedResponse: GlobalErrorHandlerResp{
 				Message: "User id not found in database",
 			},
 			responseType: "struct",
@@ -223,7 +224,7 @@ func Test_UsersRoutes(t *testing.T) {
 			route:        "/users/as9du9u192ejs",
 			method:       "GET",
 			expectedCode: 400,
-			expectedResponse: globalErrorHandlerResp{
+			expectedResponse: GlobalErrorHandlerResp{
 				Message: "Invalid uuid parameter",
 			},
 			responseType: "struct",
@@ -250,7 +251,7 @@ func Test_UsersRoutes(t *testing.T) {
 
 		req.Header.Set("Content-Type", "application/json")
 
-		resp, err := app.Test(req, -1)
+		resp, err := App.Test(req, -1)
 		if err != nil {
 			t.Fatalf("Error testing app requisition: %v", err)
 		}
@@ -295,7 +296,7 @@ func Test_UsersRoutes(t *testing.T) {
 						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
 						assert.NotEqual(t, time.Time{}, actResp.UpdatedAt, "UpdatedAt should not be nil")
 
-						for _, user := range userResponses {
+						for _, user := range UserResponses {
 							if user.Name == actResp.Name && user.Surname == actResp.Surname && user.Email == actResp.Email {
 								// Asserting ID, createdAt, and updatedAt
 								assert.Equal(t, user.ID, actResp.ID, "ID mismatch")
@@ -323,7 +324,7 @@ func Test_UsersRoutes(t *testing.T) {
 					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.UpdatedAt, "UpdatedAt should not be nil")
 
-					for _, user := range userResponses {
+					for _, user := range UserResponses {
 						if user.Name == actual.Name && user.Surname == actual.Surname && user.Email == actual.Email {
 							// Asserting ID, createdAt, and updatedAt
 							assert.Equal(t, user.ID, actual.ID, "ID mismatch")
@@ -339,7 +340,7 @@ func Test_UsersRoutes(t *testing.T) {
 		}
 
 		if testCase.testType == "global-error" {
-			assert.Equal(t, testCase.expectedResponse.(globalErrorHandlerResp).Message, string(responseBody))
+			assert.Equal(t, testCase.expectedResponse.(GlobalErrorHandlerResp).Message, string(responseBody))
 		}
 
 	}
