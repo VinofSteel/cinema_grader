@@ -37,6 +37,7 @@ type UserResponse struct {
 	Birthday  string    `json:"birthday"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+	DeletedAt sql.NullTime `json:"deletedAt"`
 }
 
 func (u *UserModel) InsertUserInDB(db *sql.DB, userInfo UserBody) (UserResponse, error) {
@@ -75,15 +76,18 @@ func (u *UserModel) GetUserByEmail(db *sql.DB, email string) (UserModel, error) 
 	return user, nil
 }
 
-func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string) ([]UserResponse, error) {
+func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string, deleted bool) ([]UserResponse, error) {
 	log.Printf("Getting all users in DB, with offset %v, limit %v and orderBy %v...", offset, limit, orderBy)
 
 	query := `SELECT 
-		id, name, surname, email, birthday, created_at, updated_at 
-		FROM users 
-			WHERE deleted_at ISNULL 
-				ORDER BY ` + orderBy +
-		` OFFSET $1 LIMIT $2;`
+		id, name, surname, email, birthday, created_at, updated_at, deleted_at 
+		FROM users`
+
+	if !deleted {
+		query += ` WHERE deleted_at ISNULL`
+	}
+
+	query += ` ORDER BY ` + orderBy + ` OFFSET $1 LIMIT $2;`
 
 	rows, err := db.Query(query, offset, limit)
 	if err != nil {
@@ -95,7 +99,7 @@ func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string) (
 	var users []UserResponse
 	for rows.Next() {
 		var user UserResponse
-		if err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		if err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, user)
@@ -120,4 +124,20 @@ func (u *UserModel) GetUserById(db *sql.DB, uuid uuid.UUID) (UserResponse, error
 	}
 
 	return user, nil
+}
+
+func (u *UserModel) DeleteUserById(db *sql.DB, uuid uuid.UUID) error {
+	log.Printf("Deleting user with uuid %s in DB... \n", uuid)
+
+	query := `UPDATE users 
+		SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
+		WHERE id = $1 AND deleted_at ISNULL;`
+
+	_, err := db.Exec(query, uuid)
+	if err != nil {
+		log.Printf("Error deleting user by uuid: %v\n", err)
+		return err
+	}
+
+	return nil
 }

@@ -59,8 +59,9 @@ func main() {
 
 	// Routes - User
 	app.Post("/users", userController.CreateUser)
-	app.Get("/users", middleware.VerifyAdmin, userController.GetAllUsers)
-	app.Get("/users/:uuid", middleware.VerifyUserOrAdmin, userController.GetUserById)
+	app.Get("/users", middleware.VerifyAdmin, userController.ListAllUsersInDB)
+	app.Get("/users/:uuid", middleware.VerifyUserOrAdmin, userController.GetUser)
+	app.Delete("/users/:uuid", middleware.VerifyUserOrAdmin, userController.DeleteUser)
 
 	// Routes - Login
 	app.Post("/login", sessionController.HandleLogin)

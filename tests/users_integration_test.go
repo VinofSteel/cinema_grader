@@ -78,8 +78,8 @@ func TestMain(m *testing.M) {
 
 	// Routes - User
 	App.Post("/users", userController.CreateUser)
-	App.Get("/users", userController.GetAllUsers)
-	App.Get("/users/:uuid", userController.GetUserById)
+	App.Get("/users", userController.ListAllUsersInDB)
+	App.Get("/users/:uuid", userController.GetUser)
 
 	// Routes - Login
 	App.Post("/login", sessionController.HandleLogin)

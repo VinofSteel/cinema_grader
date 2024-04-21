@@ -28,7 +28,7 @@ func Test_SessionsRoutes(t *testing.T) {
 	}{
 		// Post requests
 		{
-			description: "POST - Login with an existing user - Sucess Case",
+			description: "POST - Login with an existing user - Success Case",
 			route:       "/login",
 			method:      "POST",
 			data: map[string]interface{}{
@@ -53,7 +53,7 @@ func Test_SessionsRoutes(t *testing.T) {
 			testType: "global-error",
 		},
 		{
-			description: "POST - Login with unexistant email in DB - Error Case",
+			description: "POST - Login with non-existant email in DB - Error Case",
 			route:       "/login",
 			method:      "POST",
 			data: map[string]interface{}{

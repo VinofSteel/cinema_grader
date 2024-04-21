@@ -84,13 +84,14 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 	return nil
 }
 
-func (u *User) GetAllUsers(c *fiber.Ctx) error {
+func (u *User) ListAllUsersInDB(c *fiber.Ctx) error {
 	c.Accepts("application/json")
 
 	// Query params
 	offset := c.Query("offset", "0")
 	limit := c.Query("limit", "10")
 	orderBy := c.Query("sort", "created,desc")
+	deletedQuery := c.Query("deleted", "false")
 
 	offsetInt, err := strconv.Atoi(offset)
 	if err != nil {
@@ -133,7 +134,12 @@ func (u *User) GetAllUsers(c *fiber.Ctx) error {
 		orderBy = "updated_at DESC"
 	}
 
-	usersList, err := UserModel.GetAllUsers(u.DB, offsetInt, limitInt, orderBy)
+	var deleted bool
+	if deletedQuery == "true" {
+		deleted = true
+	} 
+
+	usersList, err := UserModel.GetAllUsers(u.DB, offsetInt, limitInt, orderBy, deleted)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			log.Println("Error getting user by email:", err)
@@ -148,7 +154,7 @@ func (u *User) GetAllUsers(c *fiber.Ctx) error {
 	return nil
 }
 
-func (u *User) GetUserById(c *fiber.Ctx) error {
+func (u *User) GetUser(c *fiber.Ctx) error {
 	c.Accepts("application/json")
 	uuidParam := c.Params("uuid")
 
@@ -179,5 +185,47 @@ func (u *User) GetUserById(c *fiber.Ctx) error {
 	}
 
 	c.Status(fiber.StatusOK).JSON(userInDb)
+	return nil
+}
+
+func (u *User) DeleteUser(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	_, err = UserModel.GetUserById(u.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("User id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "User id not found in database",
+			}
+		}
+
+		log.Println("Error getting user by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	if err := UserModel.DeleteUserById(u.DB, uuid); err != nil {
+		log.Println("Error deleting user in DB:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Couldn't delete user in DB",
+		}
+	}
+
+	c.Status(fiber.StatusNoContent)
 	return nil
 }
