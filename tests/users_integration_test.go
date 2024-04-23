@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -80,6 +81,7 @@ func TestMain(m *testing.M) {
 	App.Post("/users", userController.CreateUser)
 	App.Get("/users", userController.ListAllUsersInDB)
 	App.Get("/users/:uuid", userController.GetUser)
+	App.Delete("/users/:uuid", userController.DeleteUser)
 
 	// Routes - Login
 	App.Post("/login", sessionController.HandleLogin)
@@ -227,6 +229,25 @@ func Test_UsersRoutes(t *testing.T) {
 			responseType: "struct",
 			testType:     "global-error",
 		},
+		// Delete requests
+		{
+			description: "DELETE BY ID - Passing an uuid that exists in DB - Success Case",
+			route: fmt.Sprintf("/users/%v", userResponses[2].ID),
+			method: "DELETE",
+			expectedCode: 204,
+			expectedResponse: userResponses[2],
+			testType: "delete",
+		},
+		{
+			description: "DELETE BY ID - Passing an uuid that does not exist in DB - Error Case",
+			route: fmt.Sprintf("/users/%v", "aushauhsuahsaushuha"),
+			method: "DELETE",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			testType: "global-error",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -280,25 +301,25 @@ func Test_UsersRoutes(t *testing.T) {
 			if testCase.responseType == "slice" {
 				compareUserResponses := func(t *testing.T, expected, actual []models.UserResponse) {
 					for i, actResp := range actual {
-						expected[i].ID = uuid.Nil // Ignore ID
+						expected[i].ID = uuid.Nil
 
-						// Asserting other fields
 						assert.Equal(t, expected[i].Name, actResp.Name, "Name mismatch")
 						assert.Equal(t, expected[i].Surname, actResp.Surname, "Surname mismatch")
 						assert.Equal(t, expected[i].Email, actResp.Email, "Email mismatch")
 						assert.Equal(t, expected[i].Birthday, actResp.Birthday, "Birthday mismatch")
+						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should not be nil")
 
-						// Asserting ID, createdAt, and updatedAt
 						assert.NotEqual(t, uuid.Nil, actResp.ID, "ID should not be nil")
 						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
 						assert.NotEqual(t, time.Time{}, actResp.UpdatedAt, "UpdatedAt should not be nil")
 
 						for _, user := range userResponses {
 							if user.Name == actResp.Name && user.Surname == actResp.Surname && user.Email == actResp.Email {
-								// Asserting ID, createdAt, and updatedAt
 								assert.Equal(t, user.ID, actResp.ID, "ID mismatch")
 								assert.Equal(t, user.CreatedAt.UTC(), actResp.CreatedAt, "CreatedAt mismatch")
 								assert.Equal(t, user.UpdatedAt.UTC(), actResp.UpdatedAt, "UpdatedAt mismatch")
+								assert.Equal(t, user.DeletedAt.Valid, false, "DeletedAt should not be a valid date")
+								assert.Equal(t, user.DeletedAt.Time, time.Time{}, "DeletedAt should be a 0 value")
 								break
 							}
 						}
@@ -308,25 +329,25 @@ func Test_UsersRoutes(t *testing.T) {
 				compareUserResponses(t, testCase.expectedResponse.([]models.UserResponse), respSlice)
 			} else {
 				compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
-					expected.ID = uuid.Nil // Ignore ID
+					expected.ID = uuid.Nil
 
-					// Asserting other fields
 					assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
 					assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
 					assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
 					assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
-
-					// Asserting ID, createdAt, and updatedAt
+					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+					
 					assert.NotEqual(t, uuid.Nil, actual.ID, "ID should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.UpdatedAt, "UpdatedAt should not be nil")
 
 					for _, user := range userResponses {
 						if user.Name == actual.Name && user.Surname == actual.Surname && user.Email == actual.Email {
-							// Asserting ID, createdAt, and updatedAt
 							assert.Equal(t, user.ID, actual.ID, "ID mismatch")
 							assert.Equal(t, user.CreatedAt.UTC(), actual.CreatedAt, "CreatedAt mismatch")
 							assert.Equal(t, user.UpdatedAt.UTC(), actual.UpdatedAt, "UpdatedAt mismatch")
+							assert.Equal(t, user.DeletedAt.Valid, false, "DeletedAt should not be a valid date")
+							assert.Equal(t, user.DeletedAt.Time, time.Time{}, "DeletedAt should be a 0 value")
 							break
 						}
 					}
@@ -340,5 +361,21 @@ func Test_UsersRoutes(t *testing.T) {
 			assert.Equal(t, testCase.expectedResponse.(GlobalErrorHandlerResp).Message, string(responseBody))
 		}
 
+		if testCase.testType == "delete" {
+			db := initializers.NewDatabaseConn()
+			defer db.Close()
+
+			userResp, err := UserModel.GetUserByEmail(db, testCase.expectedResponse.(models.UserResponse).Email)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					assert.Fail(t, "User not found in database when getting by id", testCase.expectedResponse.(models.UserResponse).ID)
+				}
+				
+				assert.Fail(t, "Error when getting user by id", err)
+			}
+
+			assert.Equal(t, userResp.DeletedAt.Valid, true, "deletedAt date is not valid after executing delete request on user")
+			assert.NotEqual(t, userResp.DeletedAt.Time, time.Time{}, "deleteAt time should be the time of deletion, not a 0 value")
+		}
 	}
 }

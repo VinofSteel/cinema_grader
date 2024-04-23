@@ -137,7 +137,7 @@ func (u *User) ListAllUsersInDB(c *fiber.Ctx) error {
 	var deleted bool
 	if deletedQuery == "true" {
 		deleted = true
-	} 
+	}
 
 	usersList, err := UserModel.GetAllUsers(u.DB, offsetInt, limitInt, orderBy, deleted)
 	if err != nil {

@@ -30,13 +30,13 @@ type UserBody struct {
 }
 
 type UserResponse struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Surname   string    `json:"surname"`
-	Email     string    `json:"email"`
-	Birthday  string    `json:"birthday"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        uuid.UUID    `json:"id"`
+	Name      string       `json:"name"`
+	Surname   string       `json:"surname"`
+	Email     string       `json:"email"`
+	Birthday  string       `json:"birthday"`
+	CreatedAt time.Time    `json:"createdAt"`
+	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
 }
 
