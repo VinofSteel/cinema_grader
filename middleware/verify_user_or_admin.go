@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"log"
+	"time"
 
 	"github.com/VinOfSteel/cinemagrader/controllers"
 	"github.com/gofiber/fiber/v2"
@@ -26,6 +27,15 @@ func VerifyUserOrAdmin(c *fiber.Ctx) error {
 		return &fiber.Error{
 			Code:    fiber.StatusUnauthorized,
 			Message: "Invalid or non-existing token",
+		}
+	}
+
+	expirationTime := time.Unix(int64(claims["expiration"].(float64)), 0)
+	if expirationTime.Before(time.Now()) {
+		log.Println("Token has expired")
+		return &fiber.Error{
+			Code:    fiber.StatusUnauthorized,
+			Message: "Token has expired, login again",
 		}
 	}
 

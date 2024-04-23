@@ -83,8 +83,9 @@ func TestMain(m *testing.M) {
 	App.Get("/users/:uuid", userController.GetUser)
 	App.Delete("/users/:uuid", userController.DeleteUser)
 
-	// Routes - Login
+	// Routes - Session
 	App.Post("/login", sessionController.HandleLogin)
+	App.Post("/logout", sessionController.HandleLogout)
 
 	// Run tests
 	exitCode := m.Run()

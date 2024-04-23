@@ -125,3 +125,10 @@ func (s *Session) HandleLogin(c *fiber.Ctx) error {
 
 	return nil
 }
+
+func (s *Session) HandleLogout(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	c.ClearCookie("Authorization")
+	c.Status(fiber.StatusNoContent)
+	return nil
+}

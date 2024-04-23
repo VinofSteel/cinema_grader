@@ -63,8 +63,9 @@ func main() {
 	app.Get("/users/:uuid", middleware.VerifyUserOrAdmin, userController.GetUser)
 	app.Delete("/users/:uuid", middleware.VerifyUserOrAdmin, userController.DeleteUser)
 
-	// Routes - Login
+	// Routes - Session
 	app.Post("/login", sessionController.HandleLogin)
+	app.Post("/logout", sessionController.HandleLogout)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }
