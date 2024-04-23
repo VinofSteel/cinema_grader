@@ -231,17 +231,17 @@ func Test_UsersRoutes(t *testing.T) {
 		},
 		// Delete requests
 		{
-			description: "DELETE BY ID - Passing an uuid that exists in DB - Success Case",
-			route: fmt.Sprintf("/users/%v", userResponses[2].ID),
-			method: "DELETE",
-			expectedCode: 204,
+			description:      "DELETE BY ID - Passing an uuid that exists in DB - Success Case",
+			route:            fmt.Sprintf("/users/%v", userResponses[2].ID),
+			method:           "DELETE",
+			expectedCode:     204,
 			expectedResponse: userResponses[2],
-			testType: "delete",
+			testType:         "delete",
 		},
 		{
-			description: "DELETE BY ID - Passing an uuid that does not exist in DB - Error Case",
-			route: fmt.Sprintf("/users/%v", "aushauhsuahsaushuha"),
-			method: "DELETE",
+			description:  "DELETE BY ID - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/users/%v", "aushauhsuahsaushuha"),
+			method:       "DELETE",
 			expectedCode: 400,
 			expectedResponse: GlobalErrorHandlerResp{
 				Message: "Invalid uuid parameter",
@@ -336,7 +336,7 @@ func Test_UsersRoutes(t *testing.T) {
 					assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
 					assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
 					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
-					
+
 					assert.NotEqual(t, uuid.Nil, actual.ID, "ID should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.UpdatedAt, "UpdatedAt should not be nil")
@@ -370,7 +370,7 @@ func Test_UsersRoutes(t *testing.T) {
 				if err == sql.ErrNoRows {
 					assert.Fail(t, "User not found in database when getting by id", testCase.expectedResponse.(models.UserResponse).ID)
 				}
-				
+
 				assert.Fail(t, "Error when getting user by id", err)
 			}
 
