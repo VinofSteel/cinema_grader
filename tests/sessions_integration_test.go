@@ -128,6 +128,6 @@ func Test_SessionsRoutes(t *testing.T) {
 			assert.Len(t, cookies, 1, "unexpected number of cookies")
 			assert.Equal(t, "Authorization", cookies[0].Name, "unexpected cookie name")
 			assert.Equal(t, "", cookies[0].Value, "authentication cookie value hasn't been cleared")
-		}		
+		}
 	}
 }
