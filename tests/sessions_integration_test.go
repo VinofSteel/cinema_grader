@@ -66,6 +66,17 @@ func Test_SessionsRoutes(t *testing.T) {
 			},
 			testType: "global-error",
 		},
+		{
+			description: "POST - Logout with an auth cookie - Success Case",
+			route:       "/logout",
+			method:      "POST",
+			data: map[string]interface{}{
+				"email":    "teste1@teste1.com",
+				"password": "testando123@Teste",
+			},
+			expectedCode: 204,
+			testType:     "logout-success",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -105,10 +116,18 @@ func Test_SessionsRoutes(t *testing.T) {
 			cookies := resp.Cookies()
 			assert.Len(t, cookies, 1, "unexpected number of cookies")
 			assert.Equal(t, "Authorization", cookies[0].Name, "unexpected cookie name")
+			assert.NotEqual(t, "", cookies[0].Value, "cookie is empty")
 		}
 
 		if testCase.testType == "global-error" {
 			assert.Equal(t, testCase.expectedResponse.(GlobalErrorHandlerResp).Message, string(responseBody))
 		}
+
+		if testCase.testType == "logout-success" {
+			cookies := resp.Cookies()
+			assert.Len(t, cookies, 1, "unexpected number of cookies")
+			assert.Equal(t, "Authorization", cookies[0].Name, "unexpected cookie name")
+			assert.Equal(t, "", cookies[0].Value, "authentication cookie value hasn't been cleared")
+		}		
 	}
 }
