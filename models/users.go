@@ -89,15 +89,18 @@ func (u *UserModel) GetUserByEmail(db *sql.DB, email string) (UserModel, error) 
 func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string, deleted bool) ([]UserResponse, error) {
 	log.Printf("Getting all users in DB, with offset %v, limit %v and orderBy %v...", offset, limit, orderBy)
 
-	query := `SELECT 
+	var getUsersQueryBuilder strings.Builder
+	getUsersQueryBuilder.WriteString(`SELECT 
 		id, name, surname, email, birthday, created_at, updated_at, deleted_at 
-		FROM users`
+		FROM users`)
 
 	if !deleted {
-		query += ` WHERE deleted_at ISNULL`
+		getUsersQueryBuilder.WriteString(" WHERE deleted_at IS NULL")
 	}
 
-	query += ` ORDER BY ` + orderBy + ` OFFSET $1 LIMIT $2;`
+	getUsersQueryBuilder.WriteString(" ORDER BY " + orderBy + " OFFSET $1 LIMIT $2;")
+
+	query := getUsersQueryBuilder.String()
 
 	rows, err := db.Query(query, offset, limit)
 	if err != nil {
@@ -155,20 +158,20 @@ func (u *UserModel) DeleteUserById(db *sql.DB, uuid uuid.UUID) error {
 func (u *UserModel) UpdateUserById(db *sql.DB, uuid uuid.UUID, body UserEditBody) (UserResponse, error) {
 	log.Printf("Updating user with uuid %s in DB... \n", uuid)
 
-	var updateQuery strings.Builder
+	var updateQueryBuilder strings.Builder
 	var args []interface{}
 
-	updateQuery.WriteString("UPDATE users SET ")
+	updateQueryBuilder.WriteString("UPDATE users SET ")
 
 	argIndex := 1
 	if body.Name != "" {
-		updateQuery.WriteString("name = $" + strconv.Itoa(argIndex) + ", ")
+		updateQueryBuilder.WriteString("name = $" + strconv.Itoa(argIndex) + ", ")
 		args = append(args, body.Name)
 		argIndex++
 	}
 
 	if body.Surname != "" {
-		updateQuery.WriteString("surname = $" + strconv.Itoa(argIndex) + ", ")
+		updateQueryBuilder.WriteString("surname = $" + strconv.Itoa(argIndex) + ", ")
 		args = append(args, body.Surname)
 		argIndex++
 	}
@@ -181,25 +184,25 @@ func (u *UserModel) UpdateUserById(db *sql.DB, uuid uuid.UUID, body UserEditBody
 			return UserResponse{}, err
 		}
 
-		updateQuery.WriteString("password = $" + strconv.Itoa(argIndex) + ", ")
+		updateQueryBuilder.WriteString("password = $" + strconv.Itoa(argIndex) + ", ")
 		args = append(args, string(hashedPassword))
 		argIndex++
 	}
 
 	if body.Birthday != "" {
-		updateQuery.WriteString("birthday = $" + strconv.Itoa(argIndex) + ", ")
+		updateQueryBuilder.WriteString("birthday = $" + strconv.Itoa(argIndex) + ", ")
 		args = append(args, body.Birthday)
 		argIndex++
 	}
 
-	updateQuery.WriteString("updated_at = CURRENT_TIMESTAMP, ")
+	updateQueryBuilder.WriteString("updated_at = CURRENT_TIMESTAMP, ")
 
-	updateQueryString := strings.TrimSuffix(updateQuery.String(), ", ")
-	updateQueryString += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, name, surname, email, birthday, created_at, updated_at;"
+	query := strings.TrimSuffix(updateQueryBuilder.String(), ", ")
+	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, name, surname, email, birthday, created_at, updated_at;"
 	args = append(args, uuid)
 
 	var user UserResponse
-	err := db.QueryRow(updateQueryString, args...).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt)
+	err := db.QueryRow(query, args...).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		log.Printf("Error updating user by uuid: %v\n", err)
 		return UserResponse{}, err
