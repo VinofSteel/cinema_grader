@@ -3,9 +3,12 @@ package models
 import (
 	"database/sql"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserModel struct {
@@ -26,6 +29,13 @@ type UserBody struct {
 	Surname  string `json:"surname" validate:"omitempty"`
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,password"`
+	Birthday string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
+}
+
+type UserEditBody struct {
+	Name     string `json:"name" validate:"omitempty"`
+	Surname  string `json:"surname" validate:"omitempty"`
+	Password string `json:"password" validate:"omitempty,password"`
 	Birthday string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
 }
 
@@ -140,4 +150,60 @@ func (u *UserModel) DeleteUserById(db *sql.DB, uuid uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (u *UserModel) UpdateUserById(db *sql.DB, uuid uuid.UUID, body UserEditBody) (UserResponse, error) {
+	log.Printf("Updating user with uuid %s in DB... \n", uuid)
+
+	var updateQuery strings.Builder
+	var args []interface{}
+
+	updateQuery.WriteString("UPDATE users SET ")
+
+	argIndex := 1
+	if body.Name != "" {
+		updateQuery.WriteString("name = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Name)
+		argIndex++
+	}
+
+	if body.Surname != "" {
+		updateQuery.WriteString("surname = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Surname)
+		argIndex++
+	}
+
+	if body.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), 12)
+
+		if err != nil {
+			log.Println("Error encrypting user's password while updating it:", err)
+			return UserResponse{}, err
+		}
+
+		updateQuery.WriteString("password = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, string(hashedPassword))
+		argIndex++
+	}
+
+	if body.Birthday != "" {
+		updateQuery.WriteString("birthday = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Birthday)
+		argIndex++
+	}
+
+	updateQuery.WriteString("updated_at = CURRENT_TIMESTAMP, ")
+
+	updateQueryString := strings.TrimSuffix(updateQuery.String(), ", ")
+	updateQueryString += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, name, surname, email, birthday, created_at, updated_at;"
+	args = append(args, uuid)
+
+	var user UserResponse
+	err := db.QueryRow(updateQueryString, args...).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		log.Printf("Error updating user by uuid: %v\n", err)
+		return UserResponse{}, err
+	}
+
+	return user, nil
 }

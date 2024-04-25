@@ -48,7 +48,7 @@ func structValidation(validate *validator.Validate, data interface{}) []ErrorRes
 
 func ValidateData(c *fiber.Ctx, validate *validator.Validate, data interface{}) bool {
 	if errors := structValidation(validate, data); len(errors) > 0 && errors[0].Error {
-		log.Printf("Error while validating data in the ValidateData function...")
+		log.Println("Errors while validating data in the ValidateData function...", errors)
 		errMap := make(map[string]string)
 
 		for _, err := range errors {

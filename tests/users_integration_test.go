@@ -82,6 +82,7 @@ func TestMain(m *testing.M) {
 	App.Get("/users", userController.ListAllUsersInDB)
 	App.Get("/users/:uuid", userController.GetUser)
 	App.Delete("/users/:uuid", userController.DeleteUser)
+	App.Patch("/users/:uuid", userController.UpdateUser)
 
 	// Routes - Session
 	App.Post("/login", sessionController.HandleLogin)

@@ -71,7 +71,7 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 	}
 	userBody.Password = string(hashedPassword)
 
-	user, err := UserModel.InsertUserInDB(u.DB, userBody)
+	userResponse, err := UserModel.InsertUserInDB(u.DB, userBody)
 	if err != nil {
 		log.Println("Error inserting user in DB:", err)
 		return &fiber.Error{
@@ -80,7 +80,7 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 		}
 	}
 
-	c.Status(fiber.StatusCreated).JSON(user)
+	c.Status(fiber.StatusCreated).JSON(userResponse)
 	return nil
 }
 
@@ -167,7 +167,7 @@ func (u *User) GetUser(c *fiber.Ctx) error {
 		}
 	}
 
-	userInDb, err := UserModel.GetUserById(u.DB, uuid)
+	userResponse, err := UserModel.GetUserById(u.DB, uuid)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Println("User id not found in database:", err)
@@ -184,7 +184,7 @@ func (u *User) GetUser(c *fiber.Ctx) error {
 		}
 	}
 
-	c.Status(fiber.StatusOK).JSON(userInDb)
+	c.Status(fiber.StatusOK).JSON(userResponse)
 	return nil
 }
 
@@ -227,5 +227,62 @@ func (u *User) DeleteUser(c *fiber.Ctx) error {
 	}
 
 	c.Status(fiber.StatusNoContent)
+	return nil
+}
+
+func (u *User) UpdateUser(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	_, err = UserModel.GetUserById(u.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("User id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "User id not found in database",
+			}
+		}
+
+		log.Println("Error getting user by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	var userBody models.UserEditBody
+	if err := c.BodyParser(&userBody); err != nil {
+		log.Println("Error parsing JSON body:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error while parsing JSON body",
+		}
+	}
+
+	// Validating input data. We return "nil" because the ValidateData function sends a response back by itself and we need to return here to stop the function.
+	if valid := validation.ValidateData(c, u.Validate, userBody); !valid {
+		return nil
+	}
+
+	userResponse, err := UserModel.UpdateUserById(u.DB, uuid, userBody)
+	if err != nil {
+		log.Println("Error updating user in DB:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	c.Status(fiber.StatusOK).JSON(userResponse)
 	return nil
 }
