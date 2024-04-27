@@ -60,6 +60,13 @@ func TestMain(m *testing.M) {
 			Password: "testando123@Teste",
 			Birthday: "1990-10-10",
 		},
+		{
+			Name:     "cccccccc",
+			Surname:  "o c",
+			Email:    "teste3@teste3.com",
+			Password: "testando123@Teste",
+			Birthday: "1990-10-10",
+		},
 	}
 
 	// Maybe make this return the slice with the user responses?
@@ -169,9 +176,9 @@ func Test_UsersRoutes(t *testing.T) {
 					Birthday: "1990-10-10T00:00:00Z",
 				},
 				{
-					Name:     "Duplicate",
-					Surname:  "User",
-					Email:    "teste@teste.com",
+					Name:     "cccccccc",
+					Surname:  "o c",
+					Email:    "teste3@teste3.com",
 					Birthday: "1990-10-10T00:00:00Z",
 				},
 			},
@@ -250,9 +257,43 @@ func Test_UsersRoutes(t *testing.T) {
 			},
 			testType: "global-error",
 		},
+		// Update requests
+		{
+			description: "UPDATE - Update user info (all keys) - Success Case",
+			route:       fmt.Sprintf("/users/%v", userResponses[3].ID),
+			method:      "PATCH",
+			data: map[string]interface{}{
+				"name":     "New name",
+				"surname":  "New surname",
+				"password": "Testando123**@",
+				"birthday": "1990-10-10",
+			},
+			expectedCode: 200,
+			expectedResponse: models.UserResponse{
+				Name:     "New name",
+				Surname:  "New surname",
+				Email:    "teste3@teste3.com.br",
+				Birthday: "1990-10-10T00:00:00Z",
+			},
+			testType: "update",
+		},
+		{
+			description:  "UPDATE - Passing an invalid uuid - Error Case",
+			route:        "/users/as9du9u192ejs",
+			method:       "PATCH",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
 	}
 
 	for _, testCase := range testCases {
+		db := initializers.NewDatabaseConn()
+		defer db.Close()
+
 		var jsonData []byte
 		if testCase.method != "GET" && testCase.method != "DELETE" {
 			var err error
@@ -364,9 +405,6 @@ func Test_UsersRoutes(t *testing.T) {
 		}
 
 		if testCase.testType == "delete" {
-			db := initializers.NewDatabaseConn()
-			defer db.Close()
-
 			userResp, err := UserModel.GetUserByEmail(db, testCase.expectedResponse.(models.UserResponse).Email)
 			if err != nil {
 				if err == sql.ErrNoRows {
@@ -378,6 +416,34 @@ func Test_UsersRoutes(t *testing.T) {
 
 			assert.Equal(t, userResp.DeletedAt.Valid, true, "deletedAt date is not valid after executing delete request on user")
 			assert.NotEqual(t, userResp.DeletedAt.Time, time.Time{}, "deleteAt time should be the time of deletion, not a 0 value")
+		}
+
+
+		if testCase.testType == "update" {
+			// Unmarshalling the responseBody into an actual struct
+			var respStruct models.UserResponse
+			var respSlice []models.UserResponse
+
+			if testCase.responseType == "slice" {
+				if err := json.Unmarshal(responseBody, &respSlice); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			} else {
+				if err := json.Unmarshal(responseBody, &respStruct); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			}
+
+			compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
+				expected.ID = uuid.Nil
+
+				assert.Equal(t, expected.Name, actual.Name, "Name should be updated")
+				assert.Equal(t, expected.Surname, actual.Surname, "Surname should be updated")
+				assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday should be updated")
+				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+			}
+
+			compareUserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
 		}
 	}
 }

@@ -101,7 +101,6 @@ func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string, d
 	getUsersQueryBuilder.WriteString(" ORDER BY " + orderBy + " OFFSET $1 LIMIT $2;")
 
 	query := getUsersQueryBuilder.String()
-
 	rows, err := db.Query(query, offset, limit)
 	if err != nil {
 		log.Println("Error getting all users from db:", err)
