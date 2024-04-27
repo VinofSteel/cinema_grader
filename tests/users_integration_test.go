@@ -136,6 +136,7 @@ func Test_UsersRoutes(t *testing.T) {
 				Surname:  "O inho",
 				Email:    "astolfinho@astolfinho.com.br",
 				Birthday: "1990-10-10T00:00:00Z",
+				IsAdm: false,
 			},
 			testType: "success",
 		},
@@ -168,18 +169,21 @@ func Test_UsersRoutes(t *testing.T) {
 					Surname:  "O inho",
 					Email:    "astolfinho@astolfinho.com.br",
 					Birthday: "1990-10-10T00:00:00Z",
+					IsAdm: false,
 				},
 				{
 					Name:     "bbbbbb",
 					Surname:  "o b",
 					Email:    "teste2@teste2.com",
 					Birthday: "1990-10-10T00:00:00Z",
+					IsAdm: false,
 				},
 				{
 					Name:     "cccccccc",
 					Surname:  "o c",
 					Email:    "teste3@teste3.com",
 					Birthday: "1990-10-10T00:00:00Z",
+					IsAdm: false,
 				},
 			},
 			responseType: "slice",
@@ -274,6 +278,7 @@ func Test_UsersRoutes(t *testing.T) {
 				Surname:  "New surname",
 				Email:    "teste3@teste3.com.br",
 				Birthday: "1990-10-10T00:00:00Z",
+				IsAdm: false,
 			},
 			testType: "update",
 		},
@@ -350,6 +355,7 @@ func Test_UsersRoutes(t *testing.T) {
 						assert.Equal(t, expected[i].Surname, actResp.Surname, "Surname mismatch")
 						assert.Equal(t, expected[i].Email, actResp.Email, "Email mismatch")
 						assert.Equal(t, expected[i].Birthday, actResp.Birthday, "Birthday mismatch")
+						assert.Equal(t, expected[i].IsAdm, actResp.IsAdm, "IsAdm mismatch")
 						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should not be nil")
 
 						assert.NotEqual(t, uuid.Nil, actResp.ID, "ID should not be nil")
@@ -378,6 +384,7 @@ func Test_UsersRoutes(t *testing.T) {
 					assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
 					assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
 					assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
+					assert.Equal(t, expected.IsAdm, actual.IsAdm, "Birthday mismatch")
 					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
 
 					assert.NotEqual(t, uuid.Nil, actual.ID, "ID should not be nil")
@@ -418,7 +425,6 @@ func Test_UsersRoutes(t *testing.T) {
 			assert.NotEqual(t, userResp.DeletedAt.Time, time.Time{}, "deleteAt time should be the time of deletion, not a 0 value")
 		}
 
-
 		if testCase.testType == "update" {
 			// Unmarshalling the responseBody into an actual struct
 			var respStruct models.UserResponse
@@ -440,6 +446,7 @@ func Test_UsersRoutes(t *testing.T) {
 				assert.Equal(t, expected.Name, actual.Name, "Name should be updated")
 				assert.Equal(t, expected.Surname, actual.Surname, "Surname should be updated")
 				assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday should be updated")
+				assert.Equal(t, expected.IsAdm, actual.IsAdm, "IsAdm should be updated")
 				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
 			}
 

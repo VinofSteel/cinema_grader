@@ -45,6 +45,7 @@ type UserResponse struct {
 	Surname   string       `json:"surname"`
 	Email     string       `json:"email"`
 	Birthday  string       `json:"birthday"`
+	IsAdm     bool         `json:"isAdm"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
@@ -91,7 +92,7 @@ func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string, d
 
 	var getUsersQueryBuilder strings.Builder
 	getUsersQueryBuilder.WriteString(`SELECT 
-		id, name, surname, email, birthday, created_at, updated_at, deleted_at 
+		id, name, surname, email, birthday, is_adm, created_at, updated_at, deleted_at 
 		FROM users`)
 
 	if !deleted {
@@ -111,7 +112,7 @@ func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string, d
 	var users []UserResponse
 	for rows.Next() {
 		var user UserResponse
-		if err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt); err != nil {
+		if err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, user)
@@ -124,12 +125,12 @@ func (u *UserModel) GetUserById(db *sql.DB, uuid uuid.UUID) (UserResponse, error
 	log.Printf("Getting user with uuid %s in DB... \n", uuid)
 
 	query := `SELECT 
-		id, name, surname, email, birthday, created_at, updated_at 
+		id, name, surname, email, birthday, is_adm, created_at, updated_at 
 		FROM users 
 			WHERE id = $1;`
 
 	var user UserResponse
-	err := db.QueryRow(query, uuid).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt)
+	err := db.QueryRow(query, uuid).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		log.Printf("Error getting user by uuid: %v\n", err)
 		return UserResponse{}, err
@@ -197,11 +198,11 @@ func (u *UserModel) UpdateUserById(db *sql.DB, uuid uuid.UUID, body UserEditBody
 	updateQueryBuilder.WriteString("updated_at = CURRENT_TIMESTAMP, ")
 
 	query := strings.TrimSuffix(updateQueryBuilder.String(), ", ")
-	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, name, surname, email, birthday, created_at, updated_at;"
+	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, name, surname, email, birthday, is_adm, created_at, updated_at;"
 	args = append(args, uuid)
 
 	var user UserResponse
-	err := db.QueryRow(query, args...).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt)
+	err := db.QueryRow(query, args...).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		log.Printf("Error updating user by uuid: %v\n", err)
 		return UserResponse{}, err
