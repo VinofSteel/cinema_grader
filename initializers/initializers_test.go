@@ -22,50 +22,50 @@ var validate *validator.Validate
 var adminId string
 
 func TestMain(m *testing.M) {
-    // Setup
-    var err error
-    testDb, err = tests.Setup()
-    if err != nil {
-        log.Fatalf("Error setting up tests: %v", err)
-    }
+	// Setup
+	var err error
+	testDb, err = tests.Setup()
+	if err != nil {
+		log.Fatalf("Error setting up tests: %v", err)
+	}
 
-    os.Setenv("PGDATABASE", testDb)
+	os.Setenv("PGDATABASE", testDb)
 
-    // Validator setup
-    validate = NewValidator()
+	// Validator setup
+	validate = NewValidator()
 
-    // Creating a new admin user to use on the validation tests
-    db := NewDatabaseConn()
-    defer db.Close()
-    
-    var adminUser = models.UserBody{
-        Name: "The",
-        Surname: "Admin",
-        Email: "admin@admin.com",
-        Password: "Testando@Teste**",
-        Birthday: "1990-10-10",
-    }
+	// Creating a new admin user to use on the validation tests
+	db := NewDatabaseConn()
+	defer db.Close()
 
-    admResp, err := userModel.InsertUserInDB(db, adminUser)
-    if err != nil {
-        log.Fatalf("Error creating adm user in initializers tests setup: %v", err)
-    }
+	var adminUser = models.UserBody{
+		Name:     "The",
+		Surname:  "Admin",
+		Email:    "admin@admin.com",
+		Password: "Testando@Teste**",
+		Birthday: "1990-10-10",
+	}
+
+	admResp, err := userModel.InsertUserInDB(db, adminUser)
+	if err != nil {
+		log.Fatalf("Error creating adm user in initializers tests setup: %v", err)
+	}
 
 	adminId = admResp.ID.String()
 
-    if err := userModel.UpdateUserToAdmById(db, admResp.ID); err != nil {
-        log.Fatalf("Error updating user to adm in initializers tests setup: %v", err)
-    }
+	if err := userModel.UpdateUserToAdmById(db, admResp.ID); err != nil {
+		log.Fatalf("Error updating user to adm in initializers tests setup: %v", err)
+	}
 
-    // Run tests
-    exitCode := m.Run()
+	// Run tests
+	exitCode := m.Run()
 
-    // Teardown
-    if err := tests.Teardown(); err != nil {
-        log.Fatalf("Error tearing down tests: %v", err)
-    }
+	// Teardown
+	if err := tests.Teardown(); err != nil {
+		log.Fatalf("Error tearing down tests: %v", err)
+	}
 
-    os.Exit(exitCode)
+	os.Exit(exitCode)
 }
 
 func Test_NewDatabaseConn(t *testing.T) {
@@ -110,7 +110,7 @@ func Test_passwordValidation(t *testing.T) {
 	}
 }
 
-func Test_adminUuidValidation(t * testing.T) {
+func Test_adminUuidValidation(t *testing.T) {
 	for _, item := range adminUuidItems {
 		var err error
 
