@@ -19,8 +19,6 @@ type ErrorResponse struct {
 func structValidation(validate *validator.Validate, data interface{}) []ErrorResponse {
 	var validationErrors []ErrorResponse
 
-	log.Println(data, "DATA BEING VALIDATED")
-
 	errors := validate.Struct(data)
 	if errors != nil {
 		for _, err := range errors.(validator.ValidationErrors) {
@@ -40,7 +38,7 @@ func structValidation(validate *validator.Validate, data interface{}) []ErrorRes
 			case "datetime":
 				elem.ErrorMessage = fmt.Sprintf("The %s field needs to follow the YYYY-MM-DD format.", strings.ToLower(err.Field()))
 			case "isAdminUuid":
-				elem.ErrorMessage = fmt.Sprintf("The %s field needs to be a valid uuid that belongs to an admin user.", strings.ToLower(err.Field()))
+				elem.ErrorMessage = "The creatorId field needs to be a valid uuid that belongs to an admin user."
 			}
 
 			validationErrors = append(validationErrors, elem)

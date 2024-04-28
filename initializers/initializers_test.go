@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
     var adminUser = models.UserBody{
         Name: "The",
         Surname: "Admin",
-        Email: "admin1@admin1.com",
+        Email: "admin@admin.com",
         Password: "Testando@Teste**",
         Birthday: "1990-10-10",
     }
