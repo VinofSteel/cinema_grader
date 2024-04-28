@@ -57,6 +57,15 @@ func main() {
 		Validate: validate,
 	}
 
+	actorController := controllers.Actor{
+		DB:       db,
+		Validate: validate,
+	}
+
+	// Routes - Session
+	app.Post("/login", sessionController.HandleLogin)
+	app.Post("/logout", sessionController.HandleLogout)
+
 	// Routes - User
 	app.Post("/users", userController.CreateUser)
 	app.Get("/users", middleware.VerifyAdmin, userController.ListAllUsersInDB)
@@ -64,9 +73,8 @@ func main() {
 	app.Delete("/users/:uuid", middleware.VerifyUserOrAdmin, userController.DeleteUser)
 	app.Patch("/users/:uuid", middleware.VerifyUserOrAdmin, userController.UpdateUser)
 
-	// Routes - Session
-	app.Post("/login", sessionController.HandleLogin)
-	app.Post("/logout", sessionController.HandleLogout)
+	// Routes - Actor
+	app.Post("/actors", middleware.VerifyAdmin, actorController.CreateActor)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }

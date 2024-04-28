@@ -47,7 +47,7 @@ const MoviesTable string = `
 		updated_at TIMESTAMP DEFAULT NOW(),
 		deleted_at TIMESTAMP,
 		
-		creator_id UUID UNIQUE NOT NULL,
+		creator_id UUID NOT NULL,
 		FOREIGN KEY (creator_id) REFERENCES users(id)
 	);
 `
@@ -62,7 +62,7 @@ const ActorsTable string = `
 		updated_at TIMESTAMP DEFAULT NOW(),
 		deleted_at TIMESTAMP,
 
-		creator_id UUID UNIQUE NOT NULL,
+		creator_id UUID NOT NULL,
 		FOREIGN KEY (creator_id) REFERENCES users(id)
 	);
 `

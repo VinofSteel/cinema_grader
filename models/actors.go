@@ -22,10 +22,10 @@ type ActorModel struct {
 }
 
 type ActorBody struct {
-	Name      string    `json:"name"`
-	Surname   string    `json:"surname"`
-	Birthday  time.Time `json:"birthday"`
-	CreatorId string    `json:"creatorId"`
+	Name      string `json:"name" validate:"required"`
+	Surname   string `json:"surname" validate:"required"`
+	Birthday  string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
+	CreatorId string `json:"creatorId" validate:"required,isAdminUuid"`
 }
 
 type ActorResponse struct {
