@@ -210,3 +210,16 @@ func (u *UserModel) UpdateUserById(db *sql.DB, uuid uuid.UUID, body UserEditBody
 
 	return user, nil
 }
+
+func (u *UserModel) UpdateUserToAdmById(db *sql.DB, uuid uuid.UUID) error {
+	log.Printf("Updating user with uuid %s to Admin in DB... \n", uuid)
+
+	query := `UPDATE users SET is_adm = true WHERE id = $1;`
+	_, err := db.Exec(query, uuid)
+	if err != nil {
+		log.Printf("Error updating user to admin by uuid: %v\n", err)
+		return err
+	}
+
+	return nil
+}
