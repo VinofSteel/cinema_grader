@@ -1,7 +1,10 @@
 package models
 
 import (
+	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const UsersTable string = `
@@ -19,17 +22,18 @@ const UsersTable string = `
 	);
 `
 
-type Movie struct {
+type MovieModel struct {
+	ID 			uuid.UUID `json:"id"`
 	Title       string    `json:"title"`
 	Director    string    `json:"director"`
 	ReleaseDate time.Time `json:"releaseData"`
 	Grade       float64   `json:"grade"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
-	DeletedAt   time.Time `json:"deletedAt"`
+	DeletedAt   sql.NullTime `json:"deletedAt"`
 
 	CreatorId string  `json:"creatorId"`
-	Actors    []Actor `json:"actors"`
+	Actors    []ActorModel `json:"actors"`
 }
 
 const MoviesTable string = `
@@ -47,18 +51,6 @@ const MoviesTable string = `
 		FOREIGN KEY (creator_id) REFERENCES users(id)
 	);
 `
-
-type Actor struct {
-	Name      string    `json:"name"`
-	Surname   string    `json:"surname"`
-	Birthday  time.Time `json:"birthday"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	DeletedAt time.Time `json:"deletedAt"`
-
-	CreatorId string  `json:"creatorId"`
-	Movies    []Movie `json:"movies"`
-}
 
 const ActorsTable string = `
 	CREATE TABLE IF NOT EXISTS actors (
@@ -87,11 +79,12 @@ const MoviesActorsPivotTable string = `
 `
 
 type Comment struct {
+	ID 			uuid.UUID `json:"id"`
 	Comment   string    `json:"comment"`
 	Grade     float64   `json:"grade"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
-	DeletedAt time.Time `json:"deletedAt"`
+	DeletedAt sql.NullTime `json:"deletedAt"`
 
 	UserId  string `json:"userId"`
 	MovieId string `json:"movieId"`
