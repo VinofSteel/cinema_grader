@@ -22,6 +22,8 @@ import (
 )
 
 var userResponses []models.UserResponse
+var actorResponses []models.ActorResponse
+var adminId string
 
 func TestMain(m *testing.M) {
 	var err error
@@ -69,8 +71,38 @@ func TestMain(m *testing.M) {
 		},
 	}
 
-	// Maybe make this return the slice with the user responses?
 	userResponses = InsertMockedUsersInDb(db, usersToBeInsertedInDb)
+
+	// Inserting actors in DB for testing. Reminder that these have relationships to users and can only be created by admins. 
+	// Creating admin user
+	var adminUser = models.UserBody{
+		Name:     "The",
+		Surname:  "Admin",
+		Email:    "admin@admin.com",
+		Password: "Testando@Teste**",
+		Birthday: "1990-10-10",
+	}
+
+	admResp, err := UserModel.InsertUserInDB(db, adminUser)
+	if err != nil {
+		log.Fatalf("Error creating adm user in initializers tests setup: %v", err)
+	}
+
+	adminId = admResp.ID.String()
+
+	if err := UserModel.UpdateUserToAdmById(db, admResp.ID); err != nil {
+		log.Fatalf("Error updating user to adm in initializers tests setup: %v", err)
+	}
+
+	actorsToBeInsertedInDb := []models.ActorBody{
+		{
+			Name: "Actor Name 1",
+			Surname: "Actor Surname 1",
+			Birthday: "2001-10-10",
+			CreatorId: adminId,
+		},
+	}
+	actorResponses = InsertMockedActorsInDb(db, actorsToBeInsertedInDb)
 
 	App = fiber.New()
 
@@ -84,6 +116,15 @@ func TestMain(m *testing.M) {
 		Validate: validate,
 	}
 
+	actorController := controllers.Actor{
+		DB:       db,
+		Validate: validate,
+	}
+	
+	// Routes - Session
+	App.Post("/login", sessionController.HandleLogin)
+	App.Post("/logout", sessionController.HandleLogout)
+
 	// Routes - User
 	App.Post("/users", userController.CreateUser)
 	App.Get("/users", userController.ListAllUsersInDB)
@@ -91,9 +132,8 @@ func TestMain(m *testing.M) {
 	App.Delete("/users/:uuid", userController.DeleteUser)
 	App.Patch("/users/:uuid", userController.UpdateUser)
 
-	// Routes - Session
-	App.Post("/login", sessionController.HandleLogin)
-	App.Post("/logout", sessionController.HandleLogout)
+	// Routes - Actor
+	App.Post("/actors", actorController.CreateActor)
 
 	// Run tests
 	exitCode := m.Run()

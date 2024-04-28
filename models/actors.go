@@ -12,7 +12,7 @@ type ActorModel struct {
 	ID        uuid.UUID    `json:"id"`
 	Name      string       `json:"name"`
 	Surname   string       `json:"surname"`
-	Birthday  time.Time    `json:"birthday"`
+	Birthday  string       `json:"birthday"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
@@ -32,7 +32,7 @@ type ActorResponse struct {
 	ID        uuid.UUID    `json:"id"`
 	Name      string       `json:"name"`
 	Surname   string       `json:"surname"`
-	Birthday  time.Time    `json:"birthday"`
+	Birthday  string       `json:"birthday"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`

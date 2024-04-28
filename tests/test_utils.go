@@ -17,6 +17,7 @@ import (
 var App *fiber.App
 var TestDb string
 var UserModel models.UserModel
+var ActorModel models.ActorModel
 
 type GlobalErrorHandlerResp struct {
 	Message string `json:"message"`
@@ -135,6 +136,36 @@ func InsertMockedUsersInDb(db *sql.DB, users []models.UserBody) []models.UserRes
 	var output []models.UserResponse
 	for user := range respChan {
 		output = append(output, user)
+	}
+
+	return output
+}
+
+func InsertMockedActorsInDb(db *sql.DB, actors []models.ActorBody) []models.ActorResponse {
+	var wg sync.WaitGroup
+	var respChan = make(chan models.ActorResponse, len(actors))
+
+	for _, actor := range actors {
+		wg.Add(1)
+		go func(actor models.ActorBody) {
+			defer wg.Done()
+
+			actorResponse, err := ActorModel.InsertActorInDB(db, actor)
+			if err != nil {
+				log.Fatalf("Error inserting mocked actor with name %v in Db: %v", actor.Name, err)
+			}
+			respChan <- actorResponse
+		}(actor)
+	}
+
+	wg.Wait()
+	close(respChan)
+	// You know when you do something to not have to do another thing to save time and you end up wasting more time than you would have if you just did the original thing?
+	// Yeah.
+
+	var output []models.ActorResponse
+	for actor := range respChan {
+		output = append(output, actor)
 	}
 
 	return output
