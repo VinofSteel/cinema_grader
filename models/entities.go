@@ -23,16 +23,16 @@ const UsersTable string = `
 `
 
 type MovieModel struct {
-	ID 			uuid.UUID `json:"id"`
-	Title       string    `json:"title"`
-	Director    string    `json:"director"`
-	ReleaseDate time.Time `json:"releaseData"`
-	Grade       float64   `json:"grade"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID          uuid.UUID    `json:"id"`
+	Title       string       `json:"title"`
+	Director    string       `json:"director"`
+	ReleaseDate time.Time    `json:"releaseData"`
+	Grade       float64      `json:"grade"`
+	CreatedAt   time.Time    `json:"createdAt"`
+	UpdatedAt   time.Time    `json:"updatedAt"`
 	DeletedAt   sql.NullTime `json:"deletedAt"`
 
-	CreatorId string  `json:"creatorId"`
+	CreatorId string       `json:"creatorId"`
 	Actors    []ActorModel `json:"actors"`
 }
 
@@ -79,11 +79,11 @@ const MoviesActorsPivotTable string = `
 `
 
 type Comment struct {
-	ID 			uuid.UUID `json:"id"`
-	Comment   string    `json:"comment"`
-	Grade     float64   `json:"grade"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        uuid.UUID    `json:"id"`
+	Comment   string       `json:"comment"`
+	Grade     float64      `json:"grade"`
+	CreatedAt time.Time    `json:"createdAt"`
+	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
 
 	UserId  string `json:"userId"`
