@@ -105,7 +105,7 @@ func Teardown() error {
 }
 
 // God, forgive me for what I'm about to do
-func InsertMockedUsersInDb(db *sql.DB, users []models.UserBody) []models.UserResponse {
+func InsertMockedUsersInDB(db *sql.DB, users []models.UserBody) []models.UserResponse {
 	var wg sync.WaitGroup
 	var respChan = make(chan models.UserResponse, len(users))
 
@@ -141,7 +141,7 @@ func InsertMockedUsersInDb(db *sql.DB, users []models.UserBody) []models.UserRes
 	return output
 }
 
-func InsertMockedActorsInDb(db *sql.DB, actors []models.ActorBody) []models.ActorResponse {
+func InsertMockedActorsInDB(db *sql.DB, actors []models.ActorBody) []models.ActorResponse {
 	var wg sync.WaitGroup
 	var respChan = make(chan models.ActorResponse, len(actors))
 

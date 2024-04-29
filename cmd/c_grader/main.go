@@ -75,6 +75,7 @@ func main() {
 
 	// Routes - Actor
 	app.Post("/actors", middleware.VerifyAdmin, actorController.CreateActor)
+	app.Get("/actors", actorController.ListAllActorsInDB)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }

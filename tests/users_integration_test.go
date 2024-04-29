@@ -71,7 +71,7 @@ func TestMain(m *testing.M) {
 		},
 	}
 
-	userResponses = InsertMockedUsersInDb(db, usersToBeInsertedInDb)
+	userResponses = InsertMockedUsersInDB(db, usersToBeInsertedInDb)
 
 	// Inserting actors in DB for testing. Reminder that these have relationships to users and can only be created by admins.
 	// Creating admin user
@@ -102,7 +102,7 @@ func TestMain(m *testing.M) {
 			CreatorId: adminId,
 		},
 	}
-	actorResponses = InsertMockedActorsInDb(db, actorsToBeInsertedInDb)
+	actorResponses = InsertMockedActorsInDB(db, actorsToBeInsertedInDb)
 
 	App = fiber.New()
 

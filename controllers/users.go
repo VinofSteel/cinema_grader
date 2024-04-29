@@ -142,7 +142,7 @@ func (u *User) ListAllUsersInDB(c *fiber.Ctx) error {
 	usersList, err := UserModel.GetAllUsers(u.DB, offsetInt, limitInt, orderBy, deleted)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			log.Println("Error getting user by email:", err)
+			log.Println("Error getting all users:", err)
 			return &fiber.Error{
 				Code:    fiber.StatusInternalServerError,
 				Message: "Unknown error",
