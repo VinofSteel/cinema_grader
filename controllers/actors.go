@@ -246,7 +246,7 @@ func (a *Actor) UpdateActor(c *fiber.Ctx) error {
 			Message: "Unknown error",
 		}
 	}
-	
+
 	c.Status(fiber.StatusOK).JSON(actorResponse)
 	return nil
 }
