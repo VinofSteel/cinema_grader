@@ -62,6 +62,12 @@ func Test_ActorRoutes(t *testing.T) {
 					CreatorId: adminId,
 				},
 				{
+					Name:      "Actor Name 3",
+					Surname:   "Actor Surname 3",
+					Birthday:  "2001-10-10T00:00:00Z",
+					CreatorId: adminId,
+				},
+				{
 					Name:      "Mark", // Since this actor is created in the POST request, commenting the other tests will net this one a failure. Too bad!
 					Surname:   "Whalberg",
 					Birthday:  "1971-06-05T00:00:00Z",
@@ -123,6 +129,25 @@ func Test_ActorRoutes(t *testing.T) {
 			},
 			responseType: "struct",
 			testType:     "global-error",
+		},
+		// Delete requests
+		{
+			description:      "DELETE BY ID - Passing an uuid that exists in DB - Success Case",
+			route:            fmt.Sprintf("/actors/%v", actorResponses[2].ID),
+			method:           "DELETE",
+			expectedCode:     204,
+			expectedResponse: actorResponses[2],
+			testType:         "delete",
+		},
+		{
+			description:  "DELETE BY ID - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/actors/%v", "testeasdasd"),
+			method:       "DELETE",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			testType: "global-error",
 		},
 
 		//@TODO: Do tests for getting id with movies
@@ -238,6 +263,20 @@ func Test_ActorRoutes(t *testing.T) {
 
 		if testCase.testType == "global-error" {
 			assert.Equal(t, testCase.expectedResponse.(GlobalErrorHandlerResp).Message, string(responseBody))
+		}
+
+		if testCase.testType == "delete" {
+			actorResp, err := ActorModel.GetActorById(db, testCase.expectedResponse.(models.ActorResponse).ID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					assert.Fail(t, "Actor not found in database when getting by id", testCase.expectedResponse.(models.ActorResponse).ID)
+				}
+
+				assert.Fail(t, "Error when getting actor by id", err)
+			}
+
+			assert.Equal(t, actorResp.DeletedAt.Valid, true, "deletedAt date is not valid after executing delete request on actor")
+			assert.NotEqual(t, actorResp.DeletedAt.Time, time.Time{}, "deleteAt time should be the time of deletion, not a 0 value")
 		}
 	}
 }

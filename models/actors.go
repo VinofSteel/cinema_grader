@@ -59,6 +59,40 @@ func (a *ActorModel) InsertActorInDB(db *sql.DB, actorInfo ActorBody) (ActorResp
 	return actor, nil
 }
 
+func (a *ActorModel) GetAllActors(db *sql.DB, offset, limit int, orderBy string, deleted bool) ([]ActorResponse, error) {
+	log.Printf("Getting all actors in DB, with offset %v, limit %v, orderBy %v and deleted %v...\n", offset, limit, orderBy, deleted)
+
+	var getActorsQueryBuilder strings.Builder
+	getActorsQueryBuilder.WriteString(`SELECT 
+	id, name, surname, birthday, created_at, updated_at, deleted_at, creator_id 
+	FROM actors`)
+
+	if !deleted {
+		getActorsQueryBuilder.WriteString(" WHERE deleted_at IS NULL")
+	}
+
+	getActorsQueryBuilder.WriteString(" ORDER BY " + orderBy + " OFFSET $1 LIMIT $2;")
+
+	query := getActorsQueryBuilder.String()
+	rows, err := db.Query(query, offset, limit)
+	if err != nil {
+		log.Println("Error getting all actors from db:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var actors []ActorResponse
+	for rows.Next() {
+		var actor ActorResponse
+		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
+			return nil, err
+		}
+		actors = append(actors, actor)
+	}
+
+	return actors, nil
+}
+
 func (a *ActorModel) GetActorById(db *sql.DB, uuid uuid.UUID) (ActorResponse, error) {
 	log.Printf("Getting actor with uuid %s in DB... \n", uuid)
 
@@ -119,36 +153,18 @@ func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorMo
 	return actor, nil
 }
 
-func (a *ActorModel) GetAllActors(db *sql.DB, offset, limit int, orderBy string, deleted bool) ([]ActorResponse, error) {
-	log.Printf("Getting all actors in DB, with offset %v, limit %v and orderBy %v...", offset, limit, orderBy)
+func (a *ActorModel) DeleteActorById(db *sql.DB, uuid uuid.UUID) error {
+	log.Printf("Deleting actor with uuid %s in DB... \n", uuid)
 
-	var getActorsQueryBuilder strings.Builder
-	getActorsQueryBuilder.WriteString(`SELECT 
-	id, name, surname, birthday, created_at, updated_at, deleted_at, creator_id 
-	FROM actors`)
+	query := `UPDATE actors 
+		SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
+		WHERE id = $1 AND deleted_at ISNULL;`
 
-	if !deleted {
-		getActorsQueryBuilder.WriteString(" WHERE deleted_at IS NULL")
-	}
-
-	getActorsQueryBuilder.WriteString(" ORDER BY " + orderBy + " OFFSET $1 LIMIT $2;")
-
-	query := getActorsQueryBuilder.String()
-	rows, err := db.Query(query, offset, limit)
+	_, err := db.Exec(query, uuid)
 	if err != nil {
-		log.Println("Error getting all actors from db:", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	var actors []ActorResponse
-	for rows.Next() {
-		var actor ActorResponse
-		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
-			return nil, err
-		}
-		actors = append(actors, actor)
+		log.Printf("Error deleting actor by uuid: %v\n", err)
+		return err
 	}
 
-	return actors, nil
+	return nil
 }

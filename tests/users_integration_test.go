@@ -107,6 +107,12 @@ func TestMain(m *testing.M) {
 			Birthday:  "2001-10-10",
 			CreatorId: adminId,
 		},
+		{
+			Name:      "Actor Name 3",
+			Surname:   "Actor Surname 3",
+			Birthday:  "2001-10-10",
+			CreatorId: adminId,
+		},
 	}
 	actorResponses = InsertMockedActorsInDB(db, actorsToBeInsertedInDb)
 
@@ -142,6 +148,7 @@ func TestMain(m *testing.M) {
 	App.Post("/actors", actorController.CreateActor)
 	App.Get("/actors", actorController.ListAllActorsInDB)
 	App.Get("/actors/:uuid", actorController.GetActor)
+	App.Delete("/actors/:uuid", actorController.DeleteActor)
 
 	// Run tests
 	exitCode := m.Run()

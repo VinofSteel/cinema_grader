@@ -78,6 +78,7 @@ func main() {
 	app.Get("/actors", actorController.ListAllActorsInDB)
 	app.Get("/actors/:uuid", actorController.GetActor)
 	// app.Get("/actors/:uuid/movies", actorController.GetActor) @TODO: Make route to get all movies of an actor
+	app.Delete("/actors/:uuid", middleware.VerifyAdmin, actorController.DeleteActor)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }

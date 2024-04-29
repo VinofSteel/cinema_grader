@@ -152,4 +152,46 @@ func (a *Actor) GetActor(c *fiber.Ctx) error {
 	return nil
 }
 
+func (a *Actor) DeleteActor(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	_, err = ActorModel.GetActorById(a.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Actor id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "Actor id not found in database",
+			}
+		}
+
+		log.Println("Error getting actor by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	if err := ActorModel.DeleteActorById(a.DB, uuid); err != nil {
+		log.Println("Error deleting actor in DB:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Couldn't delete actor in DB",
+		}
+	}
+
+	c.Status(fiber.StatusNoContent)
+	return nil
+}
+
 // @TODO: Make controller method to get actor with movies

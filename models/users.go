@@ -88,7 +88,7 @@ func (u *UserModel) GetUserByEmail(db *sql.DB, email string) (UserModel, error) 
 }
 
 func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string, deleted bool) ([]UserResponse, error) {
-	log.Printf("Getting all users in DB, with offset %v, limit %v and orderBy %v...", offset, limit, orderBy)
+	log.Printf("Getting all users in DB, with offset %v, limit %v, orderBy %v and deleted %v...\n", offset, limit, orderBy, deleted)
 
 	var getUsersQueryBuilder strings.Builder
 	getUsersQueryBuilder.WriteString(`SELECT 
