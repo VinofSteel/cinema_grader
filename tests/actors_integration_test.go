@@ -47,6 +47,51 @@ func Test_ActorRoutes(t *testing.T) {
 			},
 			testType: "success",
 		}, // No error case, because the only possible errors are handled by validators and middleware
+		// Get requests
+		{
+			description:  "GET - All actors with basic query params - Success Case", // We don't do gigantic offsets and limits to not need to mock 10 things
+			route:        "/actors?offset=1&limit=3&sort=name,asc",
+			method:       "GET",
+			expectedCode: 200,
+			expectedResponse: []models.ActorResponse{
+				{
+					Name:      "Actor Name 2",
+					Surname:   "Actor Surname 2",
+					Birthday: "2001-10-10T00:00:00Z",
+					CreatorId: adminId,
+				},
+				{
+					Name:     "Mark", // Since this actor is created in the POST request, commenting the other tests will net this one a failure. Too bad!
+					Surname:  "Whalberg",
+					Birthday: "1971-06-05T00:00:00Z",
+					CreatorId: adminId,
+				},
+			},
+			responseType: "slice",
+			testType:     "success",
+		},
+		{
+			description:  "GET - Passing an offset that is not a number - Error Case",
+			route:        "/actors?offset=2.254",
+			method:       "GET",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Offset needs to be a valid integer",
+			},
+			responseType: "slice",
+			testType:     "global-error",
+		},
+		{
+			description:  "GET - Passing a limit that is not a number - Error Case",
+			route:        "/actors?limit=aushaushaush",
+			method:       "GET",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Limit needs to be a valid integer",
+			},
+			responseType: "slice",
+			testType:     "global-error",
+		}, // Since sort casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
 	}
 
 	for _, testCase := range testCases {
