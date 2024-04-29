@@ -113,6 +113,12 @@ func TestMain(m *testing.M) {
 			Birthday:  "2001-10-10",
 			CreatorId: adminId,
 		},
+		{
+			Name:      "Actor Name 4",
+			Surname:   "Actor Surname 4",
+			Birthday:  "2001-10-10",
+			CreatorId: adminId,
+		},
 	}
 	actorResponses = InsertMockedActorsInDB(db, actorsToBeInsertedInDb)
 
@@ -149,6 +155,7 @@ func TestMain(m *testing.M) {
 	App.Get("/actors", actorController.ListAllActorsInDB)
 	App.Get("/actors/:uuid", actorController.GetActor)
 	App.Delete("/actors/:uuid", actorController.DeleteActor)
+	App.Patch("/actors/:uuid", actorController.UpdateActor)
 
 	// Run tests
 	exitCode := m.Run()
@@ -481,7 +488,6 @@ func Test_UsersRoutes(t *testing.T) {
 		}
 
 		if testCase.testType == "update" {
-			// Unmarshalling the responseBody into an actual struct
 			var respStruct models.UserResponse
 			var respSlice []models.UserResponse
 

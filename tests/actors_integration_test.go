@@ -68,9 +68,9 @@ func Test_ActorRoutes(t *testing.T) {
 					CreatorId: adminId,
 				},
 				{
-					Name:      "Mark", // Since this actor is created in the POST request, commenting the other tests will net this one a failure. Too bad!
-					Surname:   "Whalberg",
-					Birthday:  "1971-06-05T00:00:00Z",
+					Name:      "Actor Name 4", // Since we have the actor created in the POST request, commenting the other tests will net this one a failure. Too bad!
+					Surname:   "Actor Surname 4",
+					Birthday:  "2001-10-10T00:00:00Z",
 					CreatorId: adminId,
 				},
 			},
@@ -148,6 +148,35 @@ func Test_ActorRoutes(t *testing.T) {
 				Message: "Invalid uuid parameter",
 			},
 			testType: "global-error",
+		},
+		// Update requests
+		{
+			description: "UPDATE - Update actor info (all keys) - Success Case",
+			route:       fmt.Sprintf("/actors/%v", actorResponses[3].ID),
+			method:      "PATCH",
+			data: map[string]interface{}{
+				"name":     "New name",
+				"surname":  "New surname",
+				"birthday": "1990-10-10",
+			},
+			expectedCode: 200,
+			expectedResponse: models.ActorResponse{
+				Name:     "New name",
+				Surname:  "New surname",
+				Birthday: "1990-10-10T00:00:00Z",
+			},
+			testType: "update",
+		},
+		{
+			description:  "UPDATE - Passing an invalid uuid - Error Case",
+			route:        "/actors/12345677",
+			method:       "PATCH",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			responseType: "struct",
+			testType:     "global-error",
 		},
 
 		//@TODO: Do tests for getting id with movies
@@ -277,6 +306,32 @@ func Test_ActorRoutes(t *testing.T) {
 
 			assert.Equal(t, actorResp.DeletedAt.Valid, true, "deletedAt date is not valid after executing delete request on actor")
 			assert.NotEqual(t, actorResp.DeletedAt.Time, time.Time{}, "deleteAt time should be the time of deletion, not a 0 value")
+		}
+
+		if testCase.testType == "update" {
+			var respStruct models.ActorResponse
+			var respSlice []models.ActorResponse
+
+			if testCase.responseType == "slice" {
+				if err := json.Unmarshal(responseBody, &respSlice); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			} else {
+				if err := json.Unmarshal(responseBody, &respStruct); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			}
+
+			compareActorResponses := func(t *testing.T, expected, actual models.ActorResponse) {
+				expected.ID = uuid.Nil
+
+				assert.Equal(t, expected.Name, actual.Name, "Name should be updated")
+				assert.Equal(t, expected.Surname, actual.Surname, "Surname should be updated")
+				assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday should be updated")
+				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+			}
+
+			compareActorResponses(t, testCase.expectedResponse.(models.ActorResponse), respStruct)
 		}
 	}
 }

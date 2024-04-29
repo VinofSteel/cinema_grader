@@ -194,4 +194,61 @@ func (a *Actor) DeleteActor(c *fiber.Ctx) error {
 	return nil
 }
 
+func (a *Actor) UpdateActor(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	_, err = ActorModel.GetActorById(a.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Actor id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "Actor id not found in database",
+			}
+		}
+
+		log.Println("Error getting actor by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	var actorBody models.ActorEditBody
+	if err := c.BodyParser(&actorBody); err != nil {
+		log.Println("Error parsing JSON body:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error while parsing JSON body",
+		}
+	}
+
+	// Validating input data. We return "nil" because the ValidateData function sends a response back by itself and we need to return here to stop the function.
+	if valid := validation.ValidateData(c, a.Validate, actorBody); !valid {
+		return nil
+	}
+
+	actorResponse, err := ActorModel.UpdateActorById(a.DB, uuid, actorBody)
+	if err != nil {
+		log.Println("Error updating actor in DB:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+	
+	c.Status(fiber.StatusOK).JSON(actorResponse)
+	return nil
+}
+
 // @TODO: Make controller method to get actor with movies

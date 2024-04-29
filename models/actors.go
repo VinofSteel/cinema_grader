@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,6 +28,12 @@ type ActorBody struct {
 	Surname   string `json:"surname" validate:"required"`
 	Birthday  string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
 	CreatorId string `json:"creatorId" validate:"required,isAdminUuid"`
+}
+
+type ActorEditBody struct {
+	Name     string `json:"name" validate:"omitempty"`
+	Surname  string `json:"surname" validate:"omitempty"`
+	Birthday string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
 }
 
 type ActorResponse struct {
@@ -167,4 +174,46 @@ func (a *ActorModel) DeleteActorById(db *sql.DB, uuid uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (a *ActorModel) UpdateActorById(db *sql.DB, uuid uuid.UUID, body ActorEditBody) (ActorResponse, error) {
+	log.Printf("Updating actor with uuid %s in DB... \n", uuid)
+
+	var updateQueryBuilder strings.Builder
+	var args []interface{}
+
+	updateQueryBuilder.WriteString("UPDATE actors SET ")
+
+	argIndex := 1
+	if body.Name != "" {
+		updateQueryBuilder.WriteString("name = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Name)
+		argIndex++
+	}
+
+	if body.Surname != "" {
+		updateQueryBuilder.WriteString("surname = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Surname)
+		argIndex++
+	}
+
+	if body.Birthday != "" {
+		updateQueryBuilder.WriteString("birthday = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Birthday)
+		argIndex++
+	}
+
+	updateQueryBuilder.WriteString("updated_at = CURRENT_TIMESTAMP, ")
+	query := strings.TrimSuffix(updateQueryBuilder.String(), ", ")
+	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, name, surname, birthday, created_at, updated_at, deleted_at, creator_id;"
+	args = append(args, uuid)
+
+	var actor ActorResponse
+	err := db.QueryRow(query, args...).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId)
+	if err != nil {
+		log.Printf("Error updating actor by uuid: %v\n", err)
+		return ActorResponse{}, err
+	}
+
+	return actor, nil
 }
