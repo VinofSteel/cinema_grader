@@ -10,6 +10,7 @@ import (
 	"github.com/VinOfSteel/cinemagrader/validation"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // Controller type
@@ -116,3 +117,39 @@ func (a *Actor) ListAllActorsInDB(c *fiber.Ctx) error {
 	c.Status(fiber.StatusOK).JSON(actorsList)
 	return nil
 }
+
+func (a *Actor) GetActor(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	actorResponse, err := ActorModel.GetActorById(a.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Actor id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "Actor id not found in database",
+			}
+		}
+
+		log.Println("Error getting actor by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	c.Status(fiber.StatusOK).JSON(actorResponse)
+	return nil
+}
+
+// @TODO: Make controller method to get actor with movies

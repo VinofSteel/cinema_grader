@@ -141,6 +141,7 @@ func TestMain(m *testing.M) {
 	// Routes - Actor
 	App.Post("/actors", actorController.CreateActor)
 	App.Get("/actors", actorController.ListAllActorsInDB)
+	App.Get("/actors/:uuid", actorController.GetActor)
 
 	// Run tests
 	exitCode := m.Run()

@@ -60,7 +60,7 @@ func (a *ActorModel) InsertActorInDB(db *sql.DB, actorInfo ActorBody) (ActorResp
 }
 
 func (a *ActorModel) GetActorById(db *sql.DB, uuid uuid.UUID) (ActorResponse, error) {
-	log.Printf("Getting user with uuid %s in DB... \n", uuid)
+	log.Printf("Getting actor with uuid %s in DB... \n", uuid)
 
 	query := `SELECT 
 		id, name, surname, birthday, created_at, updated_at, deleted_at, creator_id
@@ -78,6 +78,8 @@ func (a *ActorModel) GetActorById(db *sql.DB, uuid uuid.UUID) (ActorResponse, er
 }
 
 func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorModel, error) {
+	log.Printf("Getting actor with uuid %s in DB with movies... \n", uuid)
+
 	query := `SELECT 
 		a.id, a.name, a.surname, a.birthday, 
 		a.created_at, a.updated_at, a.deleted_at, 

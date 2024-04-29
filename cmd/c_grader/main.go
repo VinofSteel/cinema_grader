@@ -76,6 +76,8 @@ func main() {
 	// Routes - Actor
 	app.Post("/actors", middleware.VerifyAdmin, actorController.CreateActor)
 	app.Get("/actors", actorController.ListAllActorsInDB)
+	app.Get("/actors/:uuid", actorController.GetActor)
+	// app.Get("/actors/:uuid/movies", actorController.GetActor) @TODO: Make route to get all movies of an actor
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }
