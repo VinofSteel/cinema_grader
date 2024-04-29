@@ -126,7 +126,7 @@ func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorMo
 		a.created_at, a.updated_at, a.deleted_at, 
 		a.creator_id, 
 		m.id, m.title, m.director,
-		m.release_date, m.grade
+		m.release_date, m.average_grade
         	FROM actors a
         		LEFT JOIN movies m ON m.actor_id = a.id
         			WHERE a.id = $1; `
@@ -142,7 +142,7 @@ func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorMo
 	movies := make([]MovieModel, 0)
 	for rows.Next() {
 		var movie MovieModel
-		err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId, &movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.Grade)
+		err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId, &movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade)
 		if err != nil {
 			log.Printf("Error scanning movie row in GetActorByIdWithMovies: %v\n", err)
 			continue

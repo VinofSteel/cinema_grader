@@ -35,12 +35,12 @@ func NewDatabaseConn() *sql.DB {
 	log.Println("Connection opened succesfully!")
 
 	// Executing table creation queries as soon as DB is opened
-	createTables(db)
+	executeInitialQueries(db)
 
 	return db
 }
 
-func createTables(db *sql.DB) {
+func executeInitialQueries(db *sql.DB) {
 	// Creating uuid extension on DB
 	extensionQuery := "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
 	if _, err := db.Exec(extensionQuery); err != nil {
@@ -48,8 +48,8 @@ func createTables(db *sql.DB) {
 	}
 
 	// Creating application tables
-	for i, query := range models.Tables {
-		log.Printf("\"Creating\" table on index %v", i)
+	for i, query := range models.Queries {
+		log.Printf("Executing query on index %v", i)
 		if _, err := db.Exec(query); err != nil {
 			log.Fatalf("Error creating tables: %v", err)
 		}

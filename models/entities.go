@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const UsersTable string = `
+const UsersTableQuery string = `
 	CREATE TABLE IF NOT EXISTS users (
 		id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 		name VARCHAR(50) NOT NULL,
@@ -22,27 +22,12 @@ const UsersTable string = `
 	);
 `
 
-type MovieModel struct {
-	ID          uuid.UUID    `json:"id"`
-	Title       string       `json:"title"`
-	Director    string       `json:"director"`
-	ReleaseDate time.Time    `json:"releaseData"`
-	Grade       float64      `json:"grade"`
-	CreatedAt   time.Time    `json:"createdAt"`
-	UpdatedAt   time.Time    `json:"updatedAt"`
-	DeletedAt   sql.NullTime `json:"deletedAt"`
-
-	CreatorId string       `json:"creatorId"`
-	Actors    []ActorModel `json:"actors"`
-}
-
-const MoviesTable string = `
+const MoviesTableQuery string = `
 	CREATE TABLE IF NOT EXISTS movies (
 		id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-		title VARCHAR(50) NOT NULL,
+		title VARCHAR(50) NOT NULL UNIQUE,
 		director VARCHAR(50) NOT NULL,
 		release_date DATE NOT NULL,
-		grade DECIMAL(3, 1),
 		created_at TIMESTAMP DEFAULT NOW(),
 		updated_at TIMESTAMP DEFAULT NOW(),
 		deleted_at TIMESTAMP,
@@ -52,7 +37,7 @@ const MoviesTable string = `
 	);
 `
 
-const ActorsTable string = `
+const ActorsTableQuery string = `
 	CREATE TABLE IF NOT EXISTS actors (
 		id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 		name VARCHAR(50) NOT NULL,
@@ -67,7 +52,7 @@ const ActorsTable string = `
 	);
 `
 
-const MoviesActorsPivotTable string = `
+const MoviesActorsPivotTableQuery string = `
 	CREATE TABLE IF NOT EXISTS movies_actors(
 		id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 		
@@ -78,7 +63,7 @@ const MoviesActorsPivotTable string = `
 	);
 `
 
-type Comment struct {
+type CommentModel struct {
 	ID        uuid.UUID    `json:"id"`
 	Comment   string       `json:"comment"`
 	Grade     float64      `json:"grade"`
@@ -90,7 +75,7 @@ type Comment struct {
 	MovieId string `json:"movieId"`
 }
 
-const CommentsTable string = `
+const CommentsTableQuery string = `
 	CREATE TABLE IF NOT EXISTS comments(
 		id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 		comment TEXT NOT NULL,
@@ -106,4 +91,47 @@ const CommentsTable string = `
 	);
 `
 
-var Tables = []string{UsersTable, MoviesTable, ActorsTable, MoviesActorsPivotTable, CommentsTable}
+// Movies - comments grade relationship queries
+// We need to create the average_grade column in the movies table that has the average grade of all comments made on that movie
+// Since the comments table has to obligatorily be created after the movies table because of the relationship, we need to alter the movies table.
+
+// 1 - Adding average_grade column
+const MoviesAverageColumnQuery string = `
+	ALTER TABLE movies ADD COLUMN IF NOT EXISTS average_grade DECIMAL(3, 1) DEFAULT 0;
+`
+
+// 2 - Creating SQL function to update average_grade column
+const UpdateAverageGradeFunctionQuery string = `
+	CREATE OR REPLACE FUNCTION update_average_grade()
+	RETURNS TRIGGER AS $$
+	BEGIN
+		UPDATE movies
+		SET average_grade = (
+			SELECT COALESCE(AVG(grade), 0) FROM comments WHERE movie_id = NEW.movie_id
+		)
+		WHERE id = NEW.movie_id;
+
+		RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+`
+
+// 3 - Creating triggers to execute the function when inserting, updating or deleting data instead of doing it via code
+const CommentInsertTriggerQuery string = `
+	CREATE OR REPLACE TRIGGER comment_insert_trigger
+	AFTER INSERT ON comments
+		FOR EACH ROW EXECUTE FUNCTION update_average_grade();
+`
+const CommentUpdateTriggerQuery string = `
+	CREATE OR REPLACE TRIGGER comment_update_trigger
+	AFTER UPDATE ON comments
+		FOR EACH ROW EXECUTE FUNCTION update_average_grade();
+`
+
+const CommentDeleteTriggerQuery string = `
+	CREATE OR REPLACE TRIGGER comment_delete_trigger
+	AFTER DELETE ON comments
+		FOR EACH ROW EXECUTE FUNCTION update_average_grade();
+`
+
+var Queries = []string{UsersTableQuery, MoviesTableQuery, ActorsTableQuery, MoviesActorsPivotTableQuery, CommentsTableQuery, MoviesAverageColumnQuery, UpdateAverageGradeFunctionQuery, CommentInsertTriggerQuery, CommentUpdateTriggerQuery, CommentDeleteTriggerQuery}
