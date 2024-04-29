@@ -260,7 +260,7 @@ func Test_UsersRoutes(t *testing.T) {
 			testType:     "global-error",
 		}, // Since sort casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
 		{
-			description:      "GET BY ID - Passing a uuid that does not exist in DB - Success Case",
+			description:      "GET BY ID - Passing an uuid that does not exist in DB - Success Case",
 			route:            fmt.Sprintf("/users/%v", userResponses[1].ID),
 			method:           "GET",
 			expectedCode:     200,
@@ -269,7 +269,7 @@ func Test_UsersRoutes(t *testing.T) {
 			testType:         "success",
 		},
 		{
-			description:  "GET BY ID - Passing a uuid that does not exist in DB - Error Case",
+			description:  "GET BY ID - Passing an uuid that does not exist in DB - Error Case",
 			route:        fmt.Sprintf("/users/%v", uuid.New()),
 			method:       "GET",
 			expectedCode: 404,
