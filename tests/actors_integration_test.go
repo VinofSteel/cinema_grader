@@ -57,13 +57,13 @@ func Test_ActorRoutes(t *testing.T) {
 				{
 					Name:      "Actor Name 2",
 					Surname:   "Actor Surname 2",
-					Birthday: "2001-10-10T00:00:00Z",
+					Birthday:  "2001-10-10T00:00:00Z",
 					CreatorId: adminId,
 				},
 				{
-					Name:     "Mark", // Since this actor is created in the POST request, commenting the other tests will net this one a failure. Too bad!
-					Surname:  "Whalberg",
-					Birthday: "1971-06-05T00:00:00Z",
+					Name:      "Mark", // Since this actor is created in the POST request, commenting the other tests will net this one a failure. Too bad!
+					Surname:   "Whalberg",
+					Birthday:  "1971-06-05T00:00:00Z",
 					CreatorId: adminId,
 				},
 			},
