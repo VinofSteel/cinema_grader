@@ -73,7 +73,7 @@ func TestMain(m *testing.M) {
 
 	userResponses = InsertMockedUsersInDb(db, usersToBeInsertedInDb)
 
-	// Inserting actors in DB for testing. Reminder that these have relationships to users and can only be created by admins. 
+	// Inserting actors in DB for testing. Reminder that these have relationships to users and can only be created by admins.
 	// Creating admin user
 	var adminUser = models.UserBody{
 		Name:     "The",
@@ -96,9 +96,9 @@ func TestMain(m *testing.M) {
 
 	actorsToBeInsertedInDb := []models.ActorBody{
 		{
-			Name: "Actor Name 1",
-			Surname: "Actor Surname 1",
-			Birthday: "2001-10-10",
+			Name:      "Actor Name 1",
+			Surname:   "Actor Surname 1",
+			Birthday:  "2001-10-10",
 			CreatorId: adminId,
 		},
 	}
@@ -120,7 +120,7 @@ func TestMain(m *testing.M) {
 		DB:       db,
 		Validate: validate,
 	}
-	
+
 	// Routes - Session
 	App.Post("/login", sessionController.HandleLogin)
 	App.Post("/logout", sessionController.HandleLogout)

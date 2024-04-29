@@ -33,20 +33,20 @@ func Test_ActorRoutes(t *testing.T) {
 			route:       "/actors",
 			method:      "POST",
 			data: map[string]interface{}{
-				"name":     "Mark",
-				"surname":  "Whalberg",
-				"birthday": "1971-06-05",
+				"name":      "Mark",
+				"surname":   "Whalberg",
+				"birthday":  "1971-06-05",
 				"creatorId": adminId,
 			},
 			expectedCode: 201,
 			expectedResponse: models.ActorResponse{
-				Name:     "Mark",
-				Surname:  "Whalberg",
-				Birthday: "1971-06-05T00:00:00Z",
+				Name:      "Mark",
+				Surname:   "Whalberg",
+				Birthday:  "1971-06-05T00:00:00Z",
 				CreatorId: adminId,
 			},
 			testType: "success",
-		},
+		}, // No error case, because the only possible errors are handled by validators and middleware
 	}
 
 	for _, testCase := range testCases {
