@@ -125,11 +125,11 @@ func TestMain(m *testing.M) {
 
 	moviesToBeInsertedInDB := []models.MovieBody{
 		{
-			Title: "Inserted Movie 1",
-			Director: "Inserted Director 1",
+			Title:       "Inserted Movie 1",
+			Director:    "Inserted Director 1",
 			ReleaseDate: "1999-01-01",
-			CreatorId: adminId,
-			Actors: []uuid.UUID{actorResponses[1].ID, actorResponses[2].ID},
+			CreatorId:   adminId,
+			Actors:      []uuid.UUID{actorResponses[1].ID, actorResponses[2].ID},
 		},
 	}
 	movieResponses = InsertMockedMoviesInDB(db, moviesToBeInsertedInDB)

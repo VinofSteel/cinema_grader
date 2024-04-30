@@ -190,7 +190,6 @@ func InsertMockedMoviesInDB(db *sql.DB, movies []models.MovieBody) []models.Movi
 	wg.Wait()
 	close(respChan)
 
-
 	var output []models.MovieResponse
 	for movie := range respChan {
 		output = append(output, movie)

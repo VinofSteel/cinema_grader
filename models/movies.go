@@ -124,7 +124,7 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 
 	sort.Slice(actorResponses, func(i, j int) bool {
 		indexI := actorIndexMap[actorResponses[i].ID]
-    	indexJ := actorIndexMap[actorResponses[j].ID]
+		indexJ := actorIndexMap[actorResponses[j].ID]
 
 		return indexI < indexJ
 	})
