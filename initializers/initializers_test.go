@@ -8,18 +8,23 @@ import (
 	"github.com/VinOfSteel/cinemagrader/models"
 	"github.com/VinOfSteel/cinemagrader/tests"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 type validateTests struct {
-	Have string
+	Have any
 	Want bool
 }
 
 var testDb string
-var userModel models.UserModel
 var validate *validator.Validate
 var adminId string
+var actor1Id uuid.UUID
+var actor2Id uuid.UUID
+
+var userModel models.UserModel
+var actorModel models.ActorModel
 
 func TestMain(m *testing.M) {
 	// Setup
@@ -56,6 +61,32 @@ func TestMain(m *testing.M) {
 	if err := userModel.UpdateUserToAdmById(db, admResp.ID); err != nil {
 		log.Fatalf("Error updating user to adm in initializers tests setup: %v", err)
 	}
+
+	// Creating some actors to use on validation tests
+	var actor1 = models.ActorBody{
+		Name:      "Actor Name 1",
+		Surname:   "Actor Surname 1",
+		Birthday:  "2001-10-10",
+		CreatorId: adminId,
+	}
+	var actor2 = models.ActorBody{
+		Name:      "Actor Name 2",
+		Surname:   "Actor Surname 2",
+		Birthday:  "2001-10-10",
+		CreatorId: adminId,
+	}
+
+	actor1Res, err := actorModel.InsertActorInDB(db, actor1)
+	if err != nil {
+		log.Fatalf("Error creating actor1 in initializers tests setup: %v", err)
+	}
+	actor1Id = actor1Res.ID
+
+	actor2Res, err := actorModel.InsertActorInDB(db, actor2)
+	if err != nil {
+		log.Fatalf("Error creating actor2 in initializers tests setup: %v", err)
+	}
+	actor2Id = actor2Res.ID
 
 	// Run tests
 	exitCode := m.Run()
@@ -98,6 +129,16 @@ var adminUuidItems = []validateTests{
 	{"adminId", true},
 }
 
+var actorUuidSliceItems = []struct{
+	Have []any
+	Want bool
+}{
+	{[]any{"batata", "banana", "a61b6ed8-cd86-4bd9-833b-910b485471c6"}, false},
+	{[]any{"cebola"}, false},
+	{[]any{}, false},
+	{[]any{"actor1", "actor2"}, true},
+}
+
 func Test_passwordValidation(t *testing.T) {
 	for _, item := range passwordItems {
 		err := validate.Var(item.Have, "password")
@@ -115,10 +156,32 @@ func Test_adminUuidValidation(t *testing.T) {
 		var err error
 
 		if item.Have == "adminId" {
-			err = validate.Var(adminId, "isAdminUuid")
+			err = validate.Var(adminId, "isadminuuid")
 		} else {
-			err = validate.Var(item.Have, "isAdminUuid")
+			err = validate.Var(item.Have, "isadminuuid")
 		}
+
+		if item.Want {
+			assert.NoError(t, err, "Unexpected error for item: %v", item)
+		} else {
+			assert.Error(t, err, "Expected error for item: %v", item)
+		}
+	}
+}
+
+func Test_actorsUuidSliceValidation(t *testing.T) {
+	for _, item := range actorUuidSliceItems {
+		if len(item.Have) > 1 {
+			if item.Have[0] == "actor1" {
+				item.Have[0] = actor1Id.String()
+			}
+	
+			if item.Have[1] == "actor2" {
+				item.Have[1] = actor2Id.String()
+			}
+		}
+
+		err := validate.Var(item.Have, "validactorslice")
 
 		if item.Want {
 			assert.NoError(t, err, "Unexpected error for item: %v", item)

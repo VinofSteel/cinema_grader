@@ -30,8 +30,8 @@ type MovieBody struct {
 	Director    string `json:"director" validate:"required"`
 	ReleaseDate string `json:"releaseDate" validate:"required,datetime=2006-01-02"`
 
-	CreatorId string      `json:"creatorId" validate:"required,isAdminUuid"`
-	Actors    []uuid.UUID `json:"actors" validate:"required"`
+	CreatorId string      `json:"creatorId" validate:"required,isadminuuid"`
+	Actors    []uuid.UUID `json:"actors" validate:"required,unique,validactorslice"`
 }
 
 type MovieResponse struct {
@@ -73,14 +73,11 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 		return MovieResponse{}, err
 	}
 
-	log.Println("ACTORS IN MOVIE BODY:", movieInfo.Actors)
-
 	// Associate actors with the movie in the pivot table
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(movieInfo.Actors))
 	actorInfoCh := make(chan ActorResponse, len(movieInfo.Actors))
 	actorIndexMap := make(map[uuid.UUID]int)
-
 	for i, actorID := range movieInfo.Actors {
 		wg.Add(1)
 		actorIndexMap[actorID] = i
@@ -111,12 +108,13 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 
 	for err := range errCh {
 		if err != nil {
+			log.Printf("Error in insertion goroutine: %v", err)
 			tx.Rollback()
 			return MovieResponse{}, err
 		}
 	}
 
-	// Getting the actors of the movie to fill the Actors slice
+	// Getting the actors of the movie to fill the Actors slice and sorting the returning slice
 	var actorResponses []ActorResponse
 	for actorResp := range actorInfoCh {
 		actorResponses = append(actorResponses, actorResp)

@@ -27,7 +27,7 @@ type ActorBody struct {
 	Name      string `json:"name" validate:"required"`
 	Surname   string `json:"surname" validate:"required"`
 	Birthday  string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
-	CreatorId string `json:"creatorId" validate:"required,isAdminUuid"`
+	CreatorId string `json:"creatorId" validate:"required,isadminuuid"`
 }
 
 type ActorEditBody struct {

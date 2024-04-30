@@ -37,8 +37,10 @@ func structValidation(validate *validator.Validate, data interface{}) []ErrorRes
 				elem.ErrorMessage = "The email field needs to be a valid email."
 			case "datetime":
 				elem.ErrorMessage = fmt.Sprintf("The %s field needs to follow the YYYY-MM-DD format.", strings.ToLower(err.Field()))
-			case "isAdminUuid":
+			case "isadminuuid":
 				elem.ErrorMessage = "The creatorId field needs to be a valid uuid that belongs to an admin user."
+			case "validactorslice":
+				elem.ErrorMessage = "The actors field needs to be a valid array that contains uuids of existing actors."
 			}
 
 			validationErrors = append(validationErrors, elem)

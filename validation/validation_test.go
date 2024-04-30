@@ -14,7 +14,11 @@ import (
 
 var validate *validator.Validate
 var userModel models.UserModel
+var actorModel models.ActorModel
+
 var adminId string
+var actor1Id string
+var actor2Id string
 
 func TestMain(m *testing.M) {
 	// Setup
@@ -52,6 +56,32 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Error updating user to adm in initializers tests setup: %v", err)
 	}
 
+	// Creating some actors to use on validation tests
+	var actor1 = models.ActorBody{
+		Name:      "Actor Name 1",
+		Surname:   "Actor Surname 1",
+		Birthday:  "2001-10-10",
+		CreatorId: adminId,
+	}
+	var actor2 = models.ActorBody{
+		Name:      "Actor Name 2",
+		Surname:   "Actor Surname 2",
+		Birthday:  "2001-10-10",
+		CreatorId: adminId,
+	}
+
+	actor1Res, err := actorModel.InsertActorInDB(db, actor1)
+	if err != nil {
+		log.Fatalf("Error creating actor1 in initializers tests setup: %v", err)
+	}
+	actor1Id = actor1Res.ID.String()
+
+	actor2Res, err := actorModel.InsertActorInDB(db, actor2)
+	if err != nil {
+		log.Fatalf("Error creating actor2 in initializers tests setup: %v", err)
+	}
+	actor2Id = actor2Res.ID.String()
+
 	// Run tests
 	exitCode := m.Run()
 
@@ -68,6 +98,7 @@ func Test_structValidation(t *testing.T) {
 		data     interface{}
 		validate *validator.Validate
 	}
+
 	testCases := []struct {
 		name string
 		args args
@@ -81,12 +112,14 @@ func Test_structValidation(t *testing.T) {
 					Name      string `json:"name" validate:"required"`
 					Email     string `json:"email" validate:"required,email"`
 					Password  string `json:"password" validate:"required,password"`
-					CreatorId string `json:"creatorId" validate:"required,isAdminUuid"`
+					CreatorId string `json:"creatorId" validate:"required,isadminuuid"`
+					Actors    []interface{} `json:"actors" validate:"required,unique,validactorslice"`
 				}{
 					Name:      "John",
 					Email:     "john@john.com",
 					Password:  "Johnjohn123%@",
 					CreatorId: adminId,
+					Actors: []interface{}{actor1Id, actor2Id},
 				},
 			},
 			want: []ErrorResponse{},
@@ -101,12 +134,14 @@ func Test_structValidation(t *testing.T) {
 					Email     string `json:"email" validate:"required,email"`
 					Password  string `json:"password" validate:"required,password"`
 					Birthday  string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
-					CreatorId string `json:"creatorId" validate:"required,isAdminUuid"`
+					CreatorId string `json:"creatorId" validate:"required,isadminuuid"`
+					Actors    []interface{} `json:"actors" validate:"required,unique,validactorslice"`
 				}{
 					Email:     "banana",
 					Password:  "12345",
 					Birthday:  "23/09/1997",
 					CreatorId: "asfasd2",
+					Actors: []interface{}{"banana", "batata"},
 				},
 			},
 			want: []ErrorResponse{
@@ -137,8 +172,14 @@ func Test_structValidation(t *testing.T) {
 				{
 					Error:        true,
 					FailedField:  "creatorid",
-					Tag:          "isAdminUuid",
+					Tag:          "isadminuuid",
 					ErrorMessage: "The creatorId field needs to be a valid uuid that belongs to an admin user.",
+				},
+				{
+					Error:        true,
+					FailedField:  "actors",
+					Tag:          "validactorslice",
+					ErrorMessage: "The actors field needs to be a valid array that contains uuids of existing actors.",
 				},
 			},
 		},
