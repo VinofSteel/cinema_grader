@@ -23,6 +23,7 @@ import (
 
 var userResponses []models.UserResponse
 var actorResponses []models.ActorResponse
+var movieResponses []models.MovieResponse
 var adminId string
 
 func TestMain(m *testing.M) {
@@ -40,7 +41,7 @@ func TestMain(m *testing.M) {
 
 	// God, forgive me for what I'm about to do.
 	// Inserting mocked users in DB for test
-	usersToBeInsertedInDb := []models.UserBody{
+	usersToBeInsertedInDB := []models.UserBody{
 		{
 			Name:     "Duplicate",
 			Surname:  "User",
@@ -71,7 +72,7 @@ func TestMain(m *testing.M) {
 		},
 	}
 
-	userResponses = InsertMockedUsersInDB(db, usersToBeInsertedInDb)
+	userResponses = InsertMockedUsersInDB(db, usersToBeInsertedInDB)
 
 	// Inserting actors in DB for testing. Reminder that these have relationships to users and can only be created by admins.
 	// Creating admin user
@@ -94,7 +95,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Error updating user to adm in initializers tests setup: %v", err)
 	}
 
-	actorsToBeInsertedInDb := []models.ActorBody{
+	actorsToBeInsertedInDB := []models.ActorBody{
 		{
 			Name:      "Actor Name 1",
 			Surname:   "Actor Surname 1",
@@ -120,7 +121,18 @@ func TestMain(m *testing.M) {
 			CreatorId: adminId,
 		},
 	}
-	actorResponses = InsertMockedActorsInDB(db, actorsToBeInsertedInDb)
+	actorResponses = InsertMockedActorsInDB(db, actorsToBeInsertedInDB)
+
+	moviesToBeInsertedInDB := []models.MovieBody{
+		{
+			Title: "Inserted Movie 1",
+			Director: "Inserted Director 1",
+			ReleaseDate: "1999-01-01",
+			CreatorId: adminId,
+			Actors: []uuid.UUID{actorResponses[1].ID, actorResponses[2].ID},
+		},
+	}
+	movieResponses = InsertMockedMoviesInDB(db, moviesToBeInsertedInDB)
 
 	App = fiber.New()
 

@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"log"
+	"sort"
 	"sync"
 	"time"
 
@@ -72,13 +73,17 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 		return MovieResponse{}, err
 	}
 
+	log.Println("ACTORS IN MOVIE BODY:", movieInfo.Actors)
+
 	// Associate actors with the movie in the pivot table
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(movieInfo.Actors))
 	actorInfoCh := make(chan ActorResponse, len(movieInfo.Actors))
+	actorIndexMap := make(map[uuid.UUID]int)
 
-	for _, actorID := range movieInfo.Actors {
+	for i, actorID := range movieInfo.Actors {
 		wg.Add(1)
+		actorIndexMap[actorID] = i
 		go func(actorID uuid.UUID) {
 			defer wg.Done()
 
@@ -112,9 +117,19 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 	}
 
 	// Getting the actors of the movie to fill the Actors slice
+	var actorResponses []ActorResponse
 	for actorResp := range actorInfoCh {
-		movie.Actors = append(movie.Actors, actorResp)
+		actorResponses = append(actorResponses, actorResp)
 	}
+
+	sort.Slice(actorResponses, func(i, j int) bool {
+		indexI := actorIndexMap[actorResponses[i].ID]
+    	indexJ := actorIndexMap[actorResponses[j].ID]
+
+		return indexI < indexJ
+	})
+
+	movie.Actors = actorResponses
 
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction while inserting movies in DB: %v\n", err)
