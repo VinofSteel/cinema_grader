@@ -53,7 +53,7 @@ func (u *User) CreateUser(c *fiber.Ctx) error {
 	}
 
 	if existingUser.ID != uuid.Nil {
-		log.Println("Trying to create user with existing email in db")
+		log.Println("Trying to create user with existing email in DB")
 		return &fiber.Error{
 			Code:    fiber.StatusBadRequest,
 			Message: "User with this email already exists",

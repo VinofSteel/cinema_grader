@@ -139,6 +139,11 @@ func TestMain(m *testing.M) {
 		Validate: validate,
 	}
 
+	movieController := controllers.Movie{
+		DB:       db,
+		Validate: validate,
+	}
+
 	// Routes - Session
 	App.Post("/login", sessionController.HandleLogin)
 	App.Post("/logout", sessionController.HandleLogout)
@@ -156,6 +161,9 @@ func TestMain(m *testing.M) {
 	App.Get("/actors/:uuid", actorController.GetActor)
 	App.Delete("/actors/:uuid", actorController.DeleteActor)
 	App.Patch("/actors/:uuid", actorController.UpdateActor)
+
+	// Routes - Movie
+	App.Post("/movies", movieController.CreateMovie)
 
 	// Run tests
 	exitCode := m.Run()

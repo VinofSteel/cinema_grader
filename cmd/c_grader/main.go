@@ -62,6 +62,11 @@ func main() {
 		Validate: validate,
 	}
 
+	movieController := controllers.Movie{
+		DB:       db,
+		Validate: validate,
+	}
+
 	// Routes - Session
 	app.Post("/login", sessionController.HandleLogin)
 	app.Post("/logout", sessionController.HandleLogout)
@@ -82,6 +87,7 @@ func main() {
 	app.Patch("/actors/:uuid", middleware.VerifyAdmin, actorController.UpdateActor)
 
 	// Routes - Movie
+	app.Post("/movies", middleware.VerifyAdmin, movieController.CreateMovie)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }
