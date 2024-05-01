@@ -37,17 +37,34 @@ func Test_MoviesRoutes(t *testing.T) {
 				"director":    "Director 1",
 				"releaseDate": "1990-01-01",
 				"creatorId":   adminId,
-				"actors":      []uuid.UUID{actorResponses[0].ID, actorResponses[1].ID},
+				"actors":      []string{actorResponses[0].ID.String(), actorResponses[1].ID.String()},
 			},
 			expectedCode: 201,
 			expectedResponse: models.MovieResponse{
-				Title:       "Movie 1",
+				Title:       "Movie 1",	
 				Director:    "Director 1",
 				ReleaseDate: "1990-01-01T00:00:00Z",
 				CreatorId:   adminId,
 				Actors:      []models.ActorResponse{actorResponses[0], actorResponses[1]},
 			},
 			testType: "success",
+		},
+		{
+			description: "POST - Movie already exists in DB - Error Case",
+			route:       "/movies",
+			method:      "POST",
+			data: map[string]interface{}{
+				"title":       "Movie 1",
+				"director":    "Director 1",
+				"releaseDate": "1990-01-01",
+				"creatorId":   adminId,
+				"actors":      []string{actorResponses[0].ID.String(), actorResponses[1].ID.String()},
+			},
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Movie with this title already exists",
+			},
+			testType: "global-error",
 		},
 	}
 

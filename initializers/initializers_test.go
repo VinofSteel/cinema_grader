@@ -130,13 +130,13 @@ var adminUuidItems = []validateTests{
 }
 
 var actorUuidSliceItems = []struct{
-	Have []any
+	Have []string
 	Want bool
 }{
-	{[]any{"batata", "banana", "a61b6ed8-cd86-4bd9-833b-910b485471c6"}, false},
-	{[]any{"cebola"}, false},
-	{[]any{}, false},
-	{[]any{"actor1", "actor2"}, true},
+	{[]string{"batata", "banana", "a61b6ed8-cd86-4bd9-833b-910b485471c6"}, false},
+	{[]string{"cebola"}, false},
+	{[]string{}, false},
+	{[]string{"actor1", "actor2"}, true},
 }
 
 func Test_passwordValidation(t *testing.T) {

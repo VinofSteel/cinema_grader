@@ -129,7 +129,7 @@ func TestMain(m *testing.M) {
 			Director:    "Inserted Director 1",
 			ReleaseDate: "1999-01-01",
 			CreatorId:   adminId,
-			Actors:      []uuid.UUID{actorResponses[1].ID, actorResponses[2].ID},
+			Actors:      []string{actorResponses[1].ID.String(), actorResponses[2].ID.String()},
 		},
 	}
 	movieResponses = InsertMockedMoviesInDB(db, moviesToBeInsertedInDB)

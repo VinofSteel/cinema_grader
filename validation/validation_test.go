@@ -113,13 +113,13 @@ func Test_structValidation(t *testing.T) {
 					Email     string `json:"email" validate:"required,email"`
 					Password  string `json:"password" validate:"required,password"`
 					CreatorId string `json:"creatorId" validate:"required,isadminuuid"`
-					Actors    []interface{} `json:"actors" validate:"required,unique,validactorslice"`
+					Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
 				}{
 					Name:      "John",
 					Email:     "john@john.com",
 					Password:  "Johnjohn123%@",
 					CreatorId: adminId,
-					Actors: []interface{}{actor1Id, actor2Id},
+					Actors: []string{actor1Id, actor2Id},
 				},
 			},
 			want: []ErrorResponse{},
@@ -135,13 +135,13 @@ func Test_structValidation(t *testing.T) {
 					Password  string `json:"password" validate:"required,password"`
 					Birthday  string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
 					CreatorId string `json:"creatorId" validate:"required,isadminuuid"`
-					Actors    []interface{} `json:"actors" validate:"required,unique,validactorslice"`
+					Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
 				}{
 					Email:     "banana",
 					Password:  "12345",
 					Birthday:  "23/09/1997",
 					CreatorId: "asfasd2",
-					Actors: []interface{}{"banana", "batata"},
+					Actors: []string{"banana", "batata"},
 				},
 			},
 			want: []ErrorResponse{

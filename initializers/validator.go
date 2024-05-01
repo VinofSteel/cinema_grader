@@ -60,7 +60,7 @@ func actorsUuidSliceValidation(fl validator.FieldLevel) bool {
 	defer db.Close()
 
 	field := fl.Field()
-	actorsField := field.Interface().([]interface{})
+	actorsField := field.Interface().([]string)
 	if len(actorsField) == 0 {
 		log.Println("Actors field cannot be empty when creating a movie")
 		return false
@@ -70,11 +70,9 @@ func actorsUuidSliceValidation(fl validator.FieldLevel) bool {
 	errCh := make(chan error, len(actorsField))
 	for _, actorID := range actorsField {
 		wg.Add(1)
-		go func(actorID interface{}) {
+		go func(actorID string) {
 			defer wg.Done()
-
-			idString := actorID.(string)
-			uuid, err := uuid.Parse(idString)
+			uuid, err := uuid.Parse(actorID)
 			if err != nil {
 				log.Println("Error parsing actor uuid:", err)
 				errCh <- err
