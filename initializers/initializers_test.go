@@ -129,7 +129,7 @@ var adminUuidItems = []validateTests{
 	{"adminId", true},
 }
 
-var actorUuidSliceItems = []struct{
+var actorUuidSliceItems = []struct {
 	Have []string
 	Want bool
 }{
@@ -175,7 +175,7 @@ func Test_actorsUuidSliceValidation(t *testing.T) {
 			if item.Have[0] == "actor1" {
 				item.Have[0] = actor1Id.String()
 			}
-	
+
 			if item.Have[1] == "actor2" {
 				item.Have[1] = actor2Id.String()
 			}

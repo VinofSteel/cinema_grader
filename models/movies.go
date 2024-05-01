@@ -30,11 +30,24 @@ type MovieBody struct {
 	Director    string `json:"director" validate:"required"`
 	ReleaseDate string `json:"releaseDate" validate:"required,datetime=2006-01-02"`
 
-	CreatorId string      `json:"creatorId" validate:"required,isadminuuid"`
-	Actors    []string    `json:"actors" validate:"required,unique,validactorslice"`
+	CreatorId string   `json:"creatorId" validate:"required,isadminuuid"`
+	Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
 }
 
 type MovieResponse struct {
+	ID           uuid.UUID    `json:"id"`
+	Title        string       `json:"title"`
+	Director     string       `json:"director"`
+	ReleaseDate  string       `json:"releaseDate"`
+	AverageGrade float64      `json:"averageGrade"`
+	CreatedAt    time.Time    `json:"createdAt"`
+	UpdatedAt    time.Time    `json:"updatedAt"`
+	DeletedAt    sql.NullTime `json:"deletedAt"`
+
+	CreatorId string `json:"creatorId"`
+}
+
+type MovieResponseWithActors struct {
 	ID           uuid.UUID    `json:"id"`
 	Title        string       `json:"title"`
 	Director     string       `json:"director"`
@@ -50,14 +63,14 @@ type MovieResponse struct {
 
 var actorModel ActorModel
 
-func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResponse, error) {
+func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResponseWithActors, error) {
 	log.Printf("Inserting movie with title %s in DB by user %s...\n", movieInfo.Title, movieInfo.CreatorId)
 
 	// Starting a transaction that can be rolled back if shit happens
 	tx, err := db.Begin()
 	if err != nil {
 		log.Printf("Error starting transaction to insert movie in DB: %v\n", err)
-		return MovieResponse{}, err
+		return MovieResponseWithActors{}, err
 	}
 	defer tx.Rollback() // This will execute if any error is returned and cancel any changes to the db
 
@@ -66,11 +79,11 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 			VALUES ($1, $2, $3, $4)
 				RETURNING id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id;`
 
-	var movie MovieResponse
+	var movie MovieResponseWithActors
 	err = tx.QueryRow(query, movieInfo.Title, movieInfo.Director, movieInfo.ReleaseDate, movieInfo.CreatorId).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
 	if err != nil {
 		log.Printf("Error inserting movie into database: %v\n", err)
-		return MovieResponse{}, err
+		return MovieResponseWithActors{}, err
 	}
 
 	// Associate actors with the movie in the pivot table
@@ -82,9 +95,9 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 		actorUUID, err := uuid.Parse(actorID)
 		if err != nil {
 			log.Printf("Error parsing movie id into uuid: %v\n", err)
-			return MovieResponse{}, err
+			return MovieResponseWithActors{}, err
 		}
-		
+
 		wg.Add(1)
 		actorIndexMap[actorUUID] = i
 		go func(actorUUID uuid.UUID) {
@@ -116,7 +129,7 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 		if err != nil {
 			log.Printf("Error in insertion goroutine: %v", err)
 			tx.Rollback()
-			return MovieResponse{}, err
+			return MovieResponseWithActors{}, err
 		}
 	}
 
@@ -137,7 +150,7 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 
 	if err := tx.Commit(); err != nil {
 		log.Printf("Error committing transaction while inserting movies in DB: %v\n", err)
-		return MovieResponse{}, err
+		return MovieResponseWithActors{}, err
 	}
 
 	return movie, nil
@@ -156,6 +169,24 @@ func (m *MovieModel) GetMovieByTitle(db *sql.DB, title string) (MovieModel, erro
 	if err != nil {
 		log.Printf("Error getting movie by title: %v\n", err)
 		return MovieModel{}, err
+	}
+
+	return movie, nil
+}
+
+func (m *MovieModel) GetMovieById(db *sql.DB, uuid uuid.UUID) (MovieResponse, error) {
+	log.Printf("Getting movie with id %s in DB... \n", uuid)
+
+	query := `SELECT 
+		id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id 
+		FROM movies 
+			WHERE id = $1;`
+
+	var movie MovieResponse
+	err := db.QueryRow(query, uuid).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
+	if err != nil {
+		log.Printf("Error getting movie by id: %v\n", err)
+		return MovieResponse{}, err
 	}
 
 	return movie, nil

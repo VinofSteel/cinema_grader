@@ -82,7 +82,7 @@ func main() {
 	app.Post("/actors", middleware.VerifyAdmin, actorController.CreateActor)
 	app.Get("/actors", actorController.ListAllActorsInDB)
 	app.Get("/actors/:uuid", actorController.GetActor)
-	// app.Get("/actors/:uuid/movies", actorController.GetActor) @TODO: Make route to get all movies of an actor
+	app.Get("/actors/:uuid/movies", actorController.GetActorMovies)
 	app.Delete("/actors/:uuid", middleware.VerifyAdmin, actorController.DeleteActor)
 	app.Patch("/actors/:uuid", middleware.VerifyAdmin, actorController.UpdateActor)
 

@@ -170,9 +170,9 @@ func InsertMockedActorsInDB(db *sql.DB, actors []models.ActorBody) []models.Acto
 	return output
 }
 
-func InsertMockedMoviesInDB(db *sql.DB, movies []models.MovieBody) []models.MovieResponse {
+func InsertMockedMoviesInDB(db *sql.DB, movies []models.MovieBody) []models.MovieResponseWithActors {
 	var wg sync.WaitGroup
-	var respChan = make(chan models.MovieResponse, len(movies))
+	var respChan = make(chan models.MovieResponseWithActors, len(movies))
 
 	for _, movie := range movies {
 		wg.Add(1)
@@ -190,7 +190,7 @@ func InsertMockedMoviesInDB(db *sql.DB, movies []models.MovieBody) []models.Movi
 	wg.Wait()
 	close(respChan)
 
-	var output []models.MovieResponse
+	var output []models.MovieResponseWithActors
 	for movie := range respChan {
 		output = append(output, movie)
 	}

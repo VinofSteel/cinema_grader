@@ -152,6 +152,40 @@ func (a *Actor) GetActor(c *fiber.Ctx) error {
 	return nil
 }
 
+func (a *Actor) GetActorMovies(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	actorResponse, err := ActorModel.GetActorByIdWithMovies(a.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Actor id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "Actor id not found in database",
+			}
+		}
+
+		log.Println("Error getting actor by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	c.Status(fiber.StatusOK).JSON(actorResponse)
+	return nil
+}
+
 func (a *Actor) DeleteActor(c *fiber.Ctx) error {
 	c.Accepts("application/json")
 	uuidParam := c.Params("uuid")

@@ -109,17 +109,17 @@ func Test_structValidation(t *testing.T) {
 			args: args{
 				validate: validate,
 				data: struct {
-					Name      string `json:"name" validate:"required"`
-					Email     string `json:"email" validate:"required,email"`
-					Password  string `json:"password" validate:"required,password"`
-					CreatorId string `json:"creatorId" validate:"required,isadminuuid"`
+					Name      string   `json:"name" validate:"required"`
+					Email     string   `json:"email" validate:"required,email"`
+					Password  string   `json:"password" validate:"required,password"`
+					CreatorId string   `json:"creatorId" validate:"required,isadminuuid"`
 					Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
 				}{
 					Name:      "John",
 					Email:     "john@john.com",
 					Password:  "Johnjohn123%@",
 					CreatorId: adminId,
-					Actors: []string{actor1Id, actor2Id},
+					Actors:    []string{actor1Id, actor2Id},
 				},
 			},
 			want: []ErrorResponse{},
@@ -129,19 +129,19 @@ func Test_structValidation(t *testing.T) {
 			args: args{
 				validate: validate,
 				data: struct {
-					Name      string `json:"name" validate:"required"`
-					Surname   string `json:"surname" validate:"omitempty"`
-					Email     string `json:"email" validate:"required,email"`
-					Password  string `json:"password" validate:"required,password"`
-					Birthday  string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
-					CreatorId string `json:"creatorId" validate:"required,isadminuuid"`
+					Name      string   `json:"name" validate:"required"`
+					Surname   string   `json:"surname" validate:"omitempty"`
+					Email     string   `json:"email" validate:"required,email"`
+					Password  string   `json:"password" validate:"required,password"`
+					Birthday  string   `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
+					CreatorId string   `json:"creatorId" validate:"required,isadminuuid"`
 					Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
 				}{
 					Email:     "banana",
 					Password:  "12345",
 					Birthday:  "23/09/1997",
 					CreatorId: "asfasd2",
-					Actors: []string{"banana", "batata"},
+					Actors:    []string{"banana", "batata"},
 				},
 			},
 			want: []ErrorResponse{

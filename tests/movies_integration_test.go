@@ -40,8 +40,8 @@ func Test_MoviesRoutes(t *testing.T) {
 				"actors":      []string{actorResponses[0].ID.String(), actorResponses[1].ID.String()},
 			},
 			expectedCode: 201,
-			expectedResponse: models.MovieResponse{
-				Title:       "Movie 1",	
+			expectedResponse: models.MovieResponseWithActors{
+				Title:       "Movie 1",
 				Director:    "Director 1",
 				ReleaseDate: "1990-01-01T00:00:00Z",
 				CreatorId:   adminId,
@@ -106,8 +106,8 @@ func Test_MoviesRoutes(t *testing.T) {
 
 		if testCase.testType == "success" {
 			// Unmarshalling the responseBody into an actual struct
-			var respStruct models.MovieResponse
-			var respSlice []models.MovieResponse
+			var respStruct models.MovieResponseWithActors
+			var respSlice []models.MovieResponseWithActors
 
 			if testCase.responseType == "slice" {
 				if err := json.Unmarshal(responseBody, &respSlice); err != nil {
@@ -120,7 +120,7 @@ func Test_MoviesRoutes(t *testing.T) {
 			}
 
 			if testCase.responseType == "slice" {
-				compareMovieResponses := func(t *testing.T, expected, actual []models.MovieResponse) {
+				compareMovieResponses := func(t *testing.T, expected, actual []models.MovieResponseWithActors) {
 					for i, actResp := range actual {
 						expected[i].ID = uuid.Nil
 
@@ -153,9 +153,9 @@ func Test_MoviesRoutes(t *testing.T) {
 					}
 				}
 
-				compareMovieResponses(t, testCase.expectedResponse.([]models.MovieResponse), respSlice)
+				compareMovieResponses(t, testCase.expectedResponse.([]models.MovieResponseWithActors), respSlice)
 			} else {
-				compareMovieResponses := func(t *testing.T, expected, actual models.MovieResponse) {
+				compareMovieResponses := func(t *testing.T, expected, actual models.MovieResponseWithActors) {
 					expected.ID = uuid.Nil
 
 					assert.Equal(t, expected.Title, actual.Title, "Title mismatch")
@@ -186,7 +186,7 @@ func Test_MoviesRoutes(t *testing.T) {
 					}
 				}
 
-				compareMovieResponses(t, testCase.expectedResponse.(models.MovieResponse), respStruct)
+				compareMovieResponses(t, testCase.expectedResponse.(models.MovieResponseWithActors), respStruct)
 			}
 		}
 

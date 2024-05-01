@@ -19,8 +19,7 @@ type ActorModel struct {
 	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
 
-	CreatorId string       `json:"creatorId"`
-	Movies    []MovieModel `json:"movies"`
+	CreatorId string `json:"creatorId"`
 }
 
 type ActorBody struct {
@@ -46,6 +45,19 @@ type ActorResponse struct {
 	DeletedAt sql.NullTime `json:"deletedAt"`
 
 	CreatorId string `json:"creatorId"`
+}
+
+type ActorResponseWithMovies struct {
+	ID        uuid.UUID    `json:"id"`
+	Name      string       `json:"name"`
+	Surname   string       `json:"surname"`
+	Birthday  string       `json:"birthday"`
+	CreatedAt time.Time    `json:"createdAt"`
+	UpdatedAt time.Time    `json:"updatedAt"`
+	DeletedAt sql.NullTime `json:"deletedAt"`
+
+	CreatorId string          `json:"creatorId"`
+	Movies    []MovieResponse `json:"movies"`
 }
 
 func (a *ActorModel) InsertActorInDB(db *sql.DB, actorInfo ActorBody) (ActorResponse, error) {
@@ -118,7 +130,7 @@ func (a *ActorModel) GetActorById(db *sql.DB, uuid uuid.UUID) (ActorResponse, er
 	return actor, nil
 }
 
-func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorModel, error) {
+func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorResponseWithMovies, error) {
 	log.Printf("Getting actor with uuid %s in DB with movies... \n", uuid)
 
 	query := `SELECT 
@@ -126,23 +138,25 @@ func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorMo
 		a.created_at, a.updated_at, a.deleted_at, 
 		a.creator_id, 
 		m.id, m.title, m.director,
-		m.release_date, m.average_grade
-        	FROM actors a
-        		LEFT JOIN movies m ON m.actor_id = a.id
-        			WHERE a.id = $1; `
+		m.release_date, m.average_grade, m.created_at, m.updated_at, m.deleted_at,
+		m.creator_id 
+			FROM actors a
+				LEFT JOIN movies_actors ma ON a.id = ma.actor_id
+				LEFT JOIN movies m ON ma.movie_id = m.id
+					WHERE a.id = $1;`
 
-	var actor ActorModel
+	var actor ActorResponseWithMovies
 	rows, err := db.Query(query, uuid)
 	if err != nil {
 		log.Printf("Error getting actor by id with movies from database: %v\n", err)
-		return ActorModel{}, err
+		return ActorResponseWithMovies{}, err
 	}
 	defer rows.Close()
 
-	movies := make([]MovieModel, 0)
+	movies := make([]MovieResponse, 0)
 	for rows.Next() {
-		var movie MovieModel
-		err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId, &movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade)
+		var movie MovieResponse
+		err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId, &movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
 		if err != nil {
 			log.Printf("Error scanning movie row in GetActorByIdWithMovies: %v\n", err)
 			continue
@@ -152,7 +166,7 @@ func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorMo
 
 	if err := rows.Err(); err != nil {
 		log.Printf("Error iterating over rows in GetActorByIdWithMovies: %v\n", err)
-		return ActorModel{}, err
+		return ActorResponseWithMovies{}, err
 	}
 
 	actor.Movies = movies

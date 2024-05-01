@@ -23,7 +23,7 @@ import (
 
 var userResponses []models.UserResponse
 var actorResponses []models.ActorResponse
-var movieResponses []models.MovieResponse
+var movieResponses []models.MovieResponseWithActors
 var adminId string
 
 func TestMain(m *testing.M) {
@@ -171,6 +171,7 @@ func TestMain(m *testing.M) {
 	App.Post("/actors", actorController.CreateActor)
 	App.Get("/actors", actorController.ListAllActorsInDB)
 	App.Get("/actors/:uuid", actorController.GetActor)
+	App.Get("/actors/:uuid/movies", actorController.GetActorMovies)
 	App.Delete("/actors/:uuid", actorController.DeleteActor)
 	App.Patch("/actors/:uuid", actorController.UpdateActor)
 
