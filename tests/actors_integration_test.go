@@ -152,17 +152,17 @@ func Test_ActorRoutes(t *testing.T) {
 			responseType:     "struct",
 			testType:         "success-with-movies",
 		},
-		// {
-		// 	description:  "GET BY ID WITH MOVIES - Passing an uuid that does not exist in DB - Error Case",
-		// 	route:        fmt.Sprintf("/actors/%v/movies", uuid.New()),
-		// 	method:       "GET",
-		// 	expectedCode: 404,
-		// 	expectedResponse: GlobalErrorHandlerResp{
-		// 		Message: "Actor id not found in database",
-		// 	},
-		// 	responseType: "struct",
-		// 	testType:     "global-error",
-		// },
+		{
+			description:  "GET BY ID WITH MOVIES - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/actors/%v/movies", uuid.New()),
+			method:       "GET",
+			expectedCode: 404,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Actor id not found in database",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
 		{
 			description:  "GET BY ID WITH MOVIES - Passing an invalid uuid - Error Case",
 			route:        "/actors/randomshit/movies",

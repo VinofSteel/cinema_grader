@@ -133,6 +133,13 @@ func (a *ActorModel) GetActorById(db *sql.DB, uuid uuid.UUID) (ActorResponse, er
 func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorResponseWithMovies, error) {
 	log.Printf("Getting actor with uuid %s in DB with movies... \n", uuid)
 
+	// Verifying if uuid actually exists in the DB before proceeding with the query
+	_, err := a.GetActorById(db, uuid)
+	if err != nil {
+		log.Printf("Error getting actor by id in the database: %v\n", err)
+		return ActorResponseWithMovies{}, err
+	}
+
 	query := `SELECT 
 		a.id, a.name, a.surname, a.birthday, 
 		a.created_at, a.updated_at, a.deleted_at, 
