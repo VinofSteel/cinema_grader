@@ -130,6 +130,50 @@ func Test_ActorRoutes(t *testing.T) {
 			responseType: "struct",
 			testType:     "global-error",
 		},
+		{
+			description:      "GET BY ID WITH MOVIES - Passing an uuid that does not exist in DB - Success Case",
+			route:            fmt.Sprintf("/actors/%v/movies", actorResponses[1].ID),
+			method:           "GET",
+			expectedCode:     200,
+			expectedResponse: models.ActorResponseWithMovies{
+				Name:      actorResponses[1].Name,
+				Surname:   actorResponses[1].Surname,
+				Birthday:  actorResponses[1].Birthday,
+				CreatorId: adminId,
+				Movies: []models.MovieResponse{
+					{
+						Title:       "Inserted Movie 1",
+						Director:    "Inserted Director 1",
+						ReleaseDate: "1999-01-01T00:00:00Z",
+						CreatorId:   adminId,
+					},
+				},
+			},
+			responseType:     "struct",
+			testType:         "success-with-movies",
+		},
+		// {
+		// 	description:  "GET BY ID WITH MOVIES - Passing an uuid that does not exist in DB - Error Case",
+		// 	route:        fmt.Sprintf("/actors/%v/movies", uuid.New()),
+		// 	method:       "GET",
+		// 	expectedCode: 404,
+		// 	expectedResponse: GlobalErrorHandlerResp{
+		// 		Message: "Actor id not found in database",
+		// 	},
+		// 	responseType: "struct",
+		// 	testType:     "global-error",
+		// },
+		{
+			description:  "GET BY ID WITH MOVIES - Passing an invalid uuid - Error Case",
+			route:        "/actors/randomshit/movies",
+			method:       "GET",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
 		// Delete requests
 		{
 			description:      "DELETE BY ID - Passing an uuid that exists in DB - Success Case",
@@ -242,6 +286,7 @@ func Test_ActorRoutes(t *testing.T) {
 						assert.Equal(t, expected[i].Surname, actResp.Surname, "Surname mismatch")
 						assert.Equal(t, expected[i].Birthday, actResp.Birthday, "Birthday mismatch")
 						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should not be nil")
+						assert.Equal(t, expected[i].CreatorId, actResp.CreatorId, "CreatorId mismatch")
 
 						assert.NotEqual(t, uuid.Nil, actResp.ID, "ID should not be nil")
 						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
@@ -269,6 +314,7 @@ func Test_ActorRoutes(t *testing.T) {
 					assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
 					assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
 					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+					assert.Equal(t, expected.CreatorId, actual.CreatorId, "CreatorId mismatch")
 
 					assert.NotEqual(t, uuid.Nil, actual.ID, "ID should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")
@@ -287,6 +333,94 @@ func Test_ActorRoutes(t *testing.T) {
 				}
 
 				compareActorResponses(t, testCase.expectedResponse.(models.ActorResponse), respStruct)
+			}
+		}
+
+		if testCase.testType == "success-with-movies" {
+			// Unmarshalling the responseBody into an actual struct
+			var respStruct models.ActorResponseWithMovies
+			var respSlice []models.ActorResponseWithMovies
+
+			if testCase.responseType == "slice" {
+				if err := json.Unmarshal(responseBody, &respSlice); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			} else {
+				if err := json.Unmarshal(responseBody, &respStruct); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			}
+
+			if testCase.responseType == "slice" {
+				compareActorResponses := func(t *testing.T, expected, actual []models.ActorResponseWithMovies) {
+					for i, actResp := range actual {
+						expected[i].ID = uuid.Nil
+
+						assert.Equal(t, expected[i].Name, actResp.Name, "Name mismatch")
+						assert.Equal(t, expected[i].Surname, actResp.Surname, "Surname mismatch")
+						assert.Equal(t, expected[i].Birthday, actResp.Birthday, "Birthday mismatch")
+						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should not be nil")
+						assert.Equal(t, expected[i].CreatorId, actResp.CreatorId, "CreatorId mismatch")
+
+						assert.NotEqual(t, uuid.Nil, actResp.ID, "ID should not be nil")
+						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
+						assert.NotEqual(t, time.Time{}, actResp.UpdatedAt, "UpdatedAt should not be nil")
+
+						for i, movie := range actResp.Movies {
+							assert.Equal(t, expected[i].Movies[i].Title, movie.Title, "Movie Title mismatch")
+							assert.Equal(t, expected[i].Movies[i].Director, movie.Director, "Movie Director mismatch")
+							assert.Equal(t, expected[i].Movies[i].ReleaseDate, movie.ReleaseDate, "Movie ReleaseDate mismatch")
+							assert.Equal(t, expected[i].Movies[i].CreatorId, movie.CreatorId, "Movie CreatorId mismatch")
+						}
+
+						for _, actor := range actorResponses {
+							if actor.Name == actResp.Name && actor.Surname == actResp.Surname {
+								assert.Equal(t, actor.ID, actResp.ID, "ID mismatch")
+								assert.Equal(t, actor.CreatedAt.UTC(), actResp.CreatedAt, "CreatedAt mismatch")
+								assert.Equal(t, actor.UpdatedAt.UTC(), actResp.UpdatedAt, "UpdatedAt mismatch")
+								assert.Equal(t, actor.DeletedAt.Valid, false, "DeletedAt should not be a valid date")
+								assert.Equal(t, actor.DeletedAt.Time, time.Time{}, "DeletedAt should be a 0 value")
+								break
+							}
+						}
+					}
+				}
+
+				compareActorResponses(t, testCase.expectedResponse.([]models.ActorResponseWithMovies), respSlice)
+			} else {
+				compareActorResponses := func(t *testing.T, expected, actual models.ActorResponseWithMovies) {
+					expected.ID = uuid.Nil
+
+					assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
+					assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
+					assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
+					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+					assert.Equal(t, expected.CreatorId, actual.CreatorId, "CreatorId mismatch")
+
+					assert.NotEqual(t, uuid.Nil, actual.ID, "ID should not be nil")
+					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")
+					assert.NotEqual(t, time.Time{}, actual.UpdatedAt, "UpdatedAt should not be nil")
+
+					for i, movie := range actual.Movies {
+						assert.Equal(t, expected.Movies[i].Title, movie.Title, "Movie Title mismatch")
+						assert.Equal(t, expected.Movies[i].Director, movie.Director, "Movie Director mismatch")
+						assert.Equal(t, expected.Movies[i].ReleaseDate, movie.ReleaseDate, "Movie ReleaseDate mismatch")
+						assert.Equal(t, expected.Movies[i].CreatorId, movie.CreatorId, "Movie CreatorId mismatch")
+					}
+
+					for _, actor := range actorResponses {
+						if actor.Name == actual.Name && actor.Surname == actual.Surname {
+							assert.Equal(t, actor.ID, actual.ID, "ID mismatch")
+							assert.Equal(t, actor.CreatedAt.UTC(), actual.CreatedAt, "CreatedAt mismatch")
+							assert.Equal(t, actor.UpdatedAt.UTC(), actual.UpdatedAt, "UpdatedAt mismatch")
+							assert.Equal(t, actor.DeletedAt.Valid, false, "DeletedAt should not be a valid date")
+							assert.Equal(t, actor.DeletedAt.Time, time.Time{}, "DeletedAt should be a 0 value")
+							break
+						}
+					}
+				}
+
+				compareActorResponses(t, testCase.expectedResponse.(models.ActorResponseWithMovies), respStruct)
 			}
 		}
 
