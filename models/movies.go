@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -156,16 +157,118 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 	return movie, nil
 }
 
+func (m *MovieModel) GetAllMovies(db *sql.DB, offset, limit int, orderBy string, deleted bool) ([]MovieResponse, error) {
+	log.Printf("Getting all movies in DB, with offset %v, limit %v, orderBy %v, no actors and deleted %v...\n", offset, limit, orderBy, deleted)
+
+	var getMoviesQueryBuilder strings.Builder
+	getMoviesQueryBuilder.WriteString(`SELECT
+	id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id 
+	FROM movies`)
+
+	if !deleted {
+		getMoviesQueryBuilder.WriteString(" WHERE deleted_at IS NULL")
+	}
+
+	getMoviesQueryBuilder.WriteString(" ORDER BY " + orderBy + " OFFSET $1 LIMIT $2;")
+
+	query := getMoviesQueryBuilder.String()
+	rows, err := db.Query(query, offset, limit)
+	if err != nil {
+		log.Println("Error getting all movies from db without actors:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var movies []MovieResponse
+	for rows.Next() {
+		var movie MovieResponse
+		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId); err != nil {
+			return nil, err
+		}
+		movies = append(movies, movie)
+	}
+
+	return movies, nil
+}
+
+// Internal method that gets all actors of a movie
+func (m *MovieModel) getActorsOfAMovie(db *sql.DB, movieID uuid.UUID) ([]ActorResponse, error) {
+	query := `SELECT 
+        a.id, a.name, a.surname, a.birthday, a.created_at, a.updated_at, a.deleted_at 
+        FROM actors a
+        	JOIN movies_actors ma ON a.id = ma.actor_id
+        		WHERE ma.movie_id = $1;`
+
+	rows, err := db.Query(query, movieID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var actors []ActorResponse
+	for rows.Next() {
+		var actor ActorResponse
+		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt); err != nil {
+			return nil, err
+		}
+		actors = append(actors, actor)
+	}
+
+	return actors, nil
+}
+
+func (m *MovieModel) GetAllMoviesWithActors(db *sql.DB, offset, limit int, orderBy string, deleted bool) ([]MovieResponseWithActors, error) {
+	log.Printf("Getting all movies in DB, with offset %v, limit %v, orderBy %v, with actors and deleted %v...\n", offset, limit, orderBy, deleted)
+
+	var getMoviesQueryBuilder strings.Builder
+	getMoviesQueryBuilder.WriteString(`SELECT
+	id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id 
+	FROM movies`)
+
+	if !deleted {
+		getMoviesQueryBuilder.WriteString(" WHERE deleted_at IS NULL")
+	}
+
+	getMoviesQueryBuilder.WriteString(" ORDER BY " + orderBy + " OFFSET $1 LIMIT $2;")
+
+	query := getMoviesQueryBuilder.String()
+	rows, err := db.Query(query, offset, limit)
+	if err != nil {
+		log.Println("Error getting all movies from db without actors:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var movies []MovieResponseWithActors
+	for rows.Next() {
+		var movie MovieResponseWithActors
+		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId); err != nil {
+			return nil, err
+		}
+
+		actors, err := m.getActorsOfAMovie(db, movie.ID)
+		if err != nil {
+			log.Printf("Error getting actors of movie %v, %v", movie.Title, err)
+			return nil, err
+		}
+		movie.Actors = actors
+
+		movies = append(movies, movie)
+	}
+
+	return movies, nil
+}
+
 func (m *MovieModel) GetMovieByTitle(db *sql.DB, title string) (MovieModel, error) {
 	log.Printf("Getting movie with title %s in DB... \n", title)
 
 	query := `SELECT 
-		id, title, director, release_date, created_at, updated_at, deleted_at, creator_id 
+		id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id 
 		FROM movies 
 			WHERE title = $1;`
 
 	var movie MovieModel
-	err := db.QueryRow(query, title).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
+	err := db.QueryRow(query, title).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
 	if err != nil {
 		log.Printf("Error getting movie by title: %v\n", err)
 		return MovieModel{}, err

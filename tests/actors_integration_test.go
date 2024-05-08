@@ -131,10 +131,10 @@ func Test_ActorRoutes(t *testing.T) {
 			testType:     "global-error",
 		},
 		{
-			description:      "GET BY ID WITH MOVIES - Passing an uuid that does not exist in DB - Success Case",
-			route:            fmt.Sprintf("/actors/%v/movies", actorResponses[1].ID),
-			method:           "GET",
-			expectedCode:     200,
+			description:  "GET BY ID WITH MOVIES - Passing an uuid that does not exist in DB - Success Case",
+			route:        fmt.Sprintf("/actors/%v/movies", actorResponses[1].ID),
+			method:       "GET",
+			expectedCode: 200,
 			expectedResponse: models.ActorResponseWithMovies{
 				Name:      actorResponses[1].Name,
 				Surname:   actorResponses[1].Surname,
@@ -149,8 +149,8 @@ func Test_ActorRoutes(t *testing.T) {
 					},
 				},
 			},
-			responseType:     "struct",
-			testType:         "success-with-movies",
+			responseType: "struct",
+			testType:     "success-with-movies",
 		},
 		{
 			description:  "GET BY ID WITH MOVIES - Passing an uuid that does not exist in DB - Error Case",

@@ -177,6 +177,7 @@ func TestMain(m *testing.M) {
 
 	// Routes - Movie
 	App.Post("/movies", movieController.CreateMovie)
+	App.Get("/movies", movieController.ListAllMoviesInDB)
 
 	// Run tests
 	exitCode := m.Run()
