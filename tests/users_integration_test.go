@@ -131,6 +131,34 @@ func TestMain(m *testing.M) {
 			CreatorId:   adminId,
 			Actors:      []string{actorResponses[1].ID.String(), actorResponses[2].ID.String()},
 		},
+		{
+			Title:       "Inserted Movie 2",
+			Director:    "Inserted Director 2",
+			ReleaseDate: "1999-01-01",
+			CreatorId:   adminId,
+			Actors:      []string{actorResponses[0].ID.String()},
+		},
+		{
+			Title:       "Inserted Movie 3",
+			Director:    "Inserted Director 3",
+			ReleaseDate: "1999-01-01",
+			CreatorId:   adminId,
+			Actors:      []string{actorResponses[2].ID.String(), actorResponses[3].ID.String()},
+		},
+		{
+			Title:       "Inserted Movie 4",
+			Director:    "Inserted Director 4",
+			ReleaseDate: "1999-01-01",
+			CreatorId:   adminId,
+			Actors:      []string{actorResponses[2].ID.String(), actorResponses[3].ID.String()},
+		},
+		{
+			Title:       "Inserted Movie 5",
+			Director:    "Inserted Director 5",
+			ReleaseDate: "1999-01-01",
+			CreatorId:   adminId,
+			Actors:      []string{actorResponses[2].ID.String(), actorResponses[3].ID.String()},
+		},
 	}
 	movieResponses = InsertMockedMoviesInDB(db, moviesToBeInsertedInDB)
 

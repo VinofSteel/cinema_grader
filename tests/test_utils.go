@@ -10,6 +10,7 @@ import (
 
 	"github.com/VinOfSteel/cinemagrader/models"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -170,30 +171,69 @@ func InsertMockedActorsInDB(db *sql.DB, actors []models.ActorBody) []models.Acto
 	return output
 }
 
-func InsertMockedMoviesInDB(db *sql.DB, movies []models.MovieBody) []models.MovieResponseWithActors {
-	var wg sync.WaitGroup
-	var respChan = make(chan models.MovieResponseWithActors, len(movies))
+func getActorsOfAMovie(db *sql.DB, movieID uuid.UUID) ([]models.ActorResponse, error) {
+	query := `SELECT 
+        a.id, a.name, a.surname, a.birthday, a.created_at, a.updated_at, a.deleted_at 
+        FROM actors a
+        	JOIN movies_actors ma ON a.id = ma.actor_id
+        		WHERE ma.movie_id = $1;`
 
-	for _, movie := range movies {
+	rows, err := db.Query(query, movieID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var actors []models.ActorResponse
+	for rows.Next() {
+		var actor models.ActorResponse
+		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt); err != nil {
+			return nil, err
+		}
+		actors = append(actors, actor)
+	}
+
+	return actors, nil
+}
+
+func InsertMockedMoviesInDB(db *sql.DB, movies []models.MovieBody) []models.MovieResponseWithActors {
+	type MovieResponseWithIndex struct {
+		Index    int
+		Response models.MovieResponseWithActors
+	}
+	
+	var wg sync.WaitGroup
+	var respChan = make(chan MovieResponseWithIndex, len(movies))
+
+	for i, movie := range movies {
 		wg.Add(1)
-		go func(movie models.MovieBody) {
+		go func(movie models.MovieBody, index int) {
 			defer wg.Done()
 
 			movieResponse, err := MovieModel.InsertMovieInDB(db, movie)
 			if err != nil {
 				log.Fatalf("Error inserting mocked movie with title %v in Db: %v", movie.Title, err)
 			}
-			respChan <- movieResponse
-		}(movie)
+
+			actors, err := getActorsOfAMovie(db, movieResponse.ID)
+			if err != nil {
+				log.Fatalf("Error getting actors of movie %v, %v", movie.Title, err)
+			}
+
+			movieResponse.Actors = actors
+
+			respChan <- MovieResponseWithIndex{Index: index, Response: movieResponse}
+		}(movie, i)
 	}
 
 	wg.Wait()
 	close(respChan)
 
-	var output []models.MovieResponseWithActors
-	for movie := range respChan {
-		output = append(output, movie)
+	responses := make([]models.MovieResponseWithActors, len(movies))
+	for i := 0; i < len(movies); i++ {
+		response := <-respChan
+		responses[response.Index] = response.Response
 	}
 
-	return output
+	return responses
 }

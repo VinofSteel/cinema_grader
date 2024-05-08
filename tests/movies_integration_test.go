@@ -66,6 +66,55 @@ func Test_MoviesRoutes(t *testing.T) {
 			},
 			testType: "global-error",
 		},
+		// Get requests
+		{
+			description:  "GET - All movies with basic query params and with actors - Success Case", // We don't do gigantic offsets and limits to not need to mock 10 things
+			route:        "/movies?offset=0&limit=2&sort=title,asc&deleted=false&with_actors=true",
+			method:       "GET",
+			expectedCode: 200,
+			expectedResponse: []models.MovieResponseWithActors{
+				{
+					Title:        movieResponses[0].Title,
+					Director:     movieResponses[0].Director,
+					ReleaseDate:  movieResponses[0].ReleaseDate,
+					AverageGrade: movieResponses[0].AverageGrade,
+					CreatorId:    adminId,
+					Actors:       movieResponses[0].Actors,
+				},
+				{
+					Title:        movieResponses[1].Title,
+					Director:     movieResponses[1].Director,
+					ReleaseDate:  movieResponses[1].ReleaseDate,
+					AverageGrade: movieResponses[1].AverageGrade,
+					CreatorId:    adminId,
+					Actors:       movieResponses[1].Actors,
+				},
+			},
+			responseType: "slice",
+			testType:     "success",
+		}, // Not gonna test the movies without actors because it would be a huge hassle for what's basically the same test but without the actors key (which is arguably the hardest part of this)
+		{
+			description:  "GET - Passing an offset that is not a number - Error Case",
+			route:        "/movies?offset=2.254",
+			method:       "GET",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Offset needs to be a valid integer",
+			},
+			responseType: "slice",
+			testType:     "global-error",
+		},
+		{
+			description:  "GET - Passing a limit that is not a number - Error Case",
+			route:        "/movies?limit=aushaushaush",
+			method:       "GET",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Limit needs to be a valid integer",
+			},
+			responseType: "slice",
+			testType:     "global-error",
+		}, // Since sort and with_actors casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
 	}
 
 	for _, testCase := range testCases {
@@ -133,11 +182,12 @@ func Test_MoviesRoutes(t *testing.T) {
 						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
 						assert.NotEqual(t, time.Time{}, actResp.UpdatedAt, "UpdatedAt should not be nil")
 
-						for i, actor := range actResp.Actors {
-							assert.Equal(t, expected[i].Actors[i].Name, actor.Name, "Actor Name mismatch")
-							assert.Equal(t, expected[i].Actors[i].Surname, actor.Surname, "Actor Surname mismatch")
-							assert.Equal(t, expected[i].Actors[i].Birthday, actor.Birthday, "Actor Birthday mismatch")
-							assert.Equal(t, expected[i].Actors[i].CreatorId, actor.CreatorId, "Actor CreatorId mismatch")
+						for j, actor := range actResp.Actors {
+							assert.Equal(t, expected[i].Actors[j].ID, actor.ID, "Actor ID mismatch")
+							assert.Equal(t, expected[i].Actors[j].Name, actor.Name, "Actor Name mismatch")
+							assert.Equal(t, expected[i].Actors[j].Surname, actor.Surname, "Actor Surname mismatch")
+							assert.Equal(t, expected[i].Actors[j].Birthday, actor.Birthday, "Actor Birthday mismatch")
+							assert.Equal(t, expected[i].Actors[j].CreatorId, actor.CreatorId, "Actor CreatorId mismatch")
 						}
 
 						for _, movie := range movieResponses {

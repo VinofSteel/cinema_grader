@@ -64,6 +64,33 @@ type MovieResponseWithActors struct {
 
 var actorModel ActorModel
 
+// Internal methods
+func (m *MovieModel) getActorsOfAMovie(db *sql.DB, movieID uuid.UUID) ([]ActorResponse, error) {
+	query := `SELECT 
+        a.id, a.name, a.surname, a.birthday, a.created_at, a.updated_at, a.deleted_at 
+        FROM actors a
+        	JOIN movies_actors ma ON a.id = ma.actor_id
+        		WHERE ma.movie_id = $1;`
+
+	rows, err := db.Query(query, movieID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var actors []ActorResponse
+	for rows.Next() {
+		var actor ActorResponse
+		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt); err != nil {
+			return nil, err
+		}
+		actors = append(actors, actor)
+	}
+
+	return actors, nil
+}
+
+// Public methods
 func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResponseWithActors, error) {
 	log.Printf("Inserting movie with title %s in DB by user %s...\n", movieInfo.Title, movieInfo.CreatorId)
 
@@ -189,32 +216,6 @@ func (m *MovieModel) GetAllMovies(db *sql.DB, offset, limit int, orderBy string,
 	}
 
 	return movies, nil
-}
-
-// Internal method that gets all actors of a movie
-func (m *MovieModel) getActorsOfAMovie(db *sql.DB, movieID uuid.UUID) ([]ActorResponse, error) {
-	query := `SELECT 
-        a.id, a.name, a.surname, a.birthday, a.created_at, a.updated_at, a.deleted_at 
-        FROM actors a
-        	JOIN movies_actors ma ON a.id = ma.actor_id
-        		WHERE ma.movie_id = $1;`
-
-	rows, err := db.Query(query, movieID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var actors []ActorResponse
-	for rows.Next() {
-		var actor ActorResponse
-		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt); err != nil {
-			return nil, err
-		}
-		actors = append(actors, actor)
-	}
-
-	return actors, nil
 }
 
 func (m *MovieModel) GetAllMoviesWithActors(db *sql.DB, offset, limit int, orderBy string, deleted bool) ([]MovieResponseWithActors, error) {
