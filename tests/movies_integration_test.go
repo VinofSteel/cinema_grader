@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -115,6 +116,37 @@ func Test_MoviesRoutes(t *testing.T) {
 			responseType: "slice",
 			testType:     "global-error",
 		}, // Since sort and with_actors casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
+		{
+			description:      "GET BY ID - Passing an uuid that exists in DB - Success Case",
+			route:            fmt.Sprintf("/movies/%v", movieResponses[1].ID),
+			method:           "GET",
+			expectedCode:     200,
+			expectedResponse: movieResponses[1],
+			responseType:     "struct",
+			testType:         "success",
+		},
+		{
+			description:  "GET BY ID - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/movies/%v", uuid.New()),
+			method:       "GET",
+			expectedCode: 404,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Movie id not found in database",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
+		{
+			description:  "GET BY ID - Passing an invalid uuid - Error Case",
+			route:        "/movies/testestetsts",
+			method:       "GET",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
 	}
 
 	for _, testCase := range testCases {

@@ -100,7 +100,7 @@ func Test_ActorRoutes(t *testing.T) {
 			testType:     "global-error",
 		}, // Since sort casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
 		{
-			description:      "GET BY ID - Passing an uuid that does not exist in DB - Success Case",
+			description:      "GET BY ID - Passing an uuid that exists in DB - Success Case",
 			route:            fmt.Sprintf("/actors/%v", actorResponses[1].ID),
 			method:           "GET",
 			expectedCode:     200,
