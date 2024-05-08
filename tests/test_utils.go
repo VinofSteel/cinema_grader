@@ -201,7 +201,7 @@ func InsertMockedMoviesInDB(db *sql.DB, movies []models.MovieBody) []models.Movi
 		Index    int
 		Response models.MovieResponseWithActors
 	}
-	
+
 	var wg sync.WaitGroup
 	var respChan = make(chan MovieResponseWithIndex, len(movies))
 
