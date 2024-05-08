@@ -164,3 +164,37 @@ func (m *Movie) ListAllMoviesInDB(c *fiber.Ctx) error {
 	c.Status(fiber.StatusOK).JSON(moviesList)
 	return nil
 }
+
+func (m *Movie) GetMovie(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	movieResponse, err := MovieModel.GetMovieByIdWithActors(m.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Movie id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "Movie id not found in database",
+			}
+		}
+
+		log.Println("Error getting movie by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	c.Status(fiber.StatusOK).JSON(movieResponse)
+	return nil
+}

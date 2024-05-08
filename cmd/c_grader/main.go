@@ -89,6 +89,7 @@ func main() {
 	// Routes - Movie
 	app.Post("/movies", middleware.VerifyAdmin, movieController.CreateMovie)
 	app.Get("/movies", movieController.ListAllMoviesInDB)
+	app.Get("/movies/:uuid", movieController.GetMovie)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }

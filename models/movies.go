@@ -278,7 +278,7 @@ func (m *MovieModel) GetMovieByTitle(db *sql.DB, title string) (MovieModel, erro
 	return movie, nil
 }
 
-func (m *MovieModel) GetMovieById(db *sql.DB, uuid uuid.UUID) (MovieResponse, error) {
+func (m *MovieModel) GetMovieByIdWithActors(db *sql.DB, uuid uuid.UUID) (MovieResponseWithActors, error) {
 	log.Printf("Getting movie with id %s in DB... \n", uuid)
 
 	query := `SELECT 
@@ -286,12 +286,19 @@ func (m *MovieModel) GetMovieById(db *sql.DB, uuid uuid.UUID) (MovieResponse, er
 		FROM movies 
 			WHERE id = $1;`
 
-	var movie MovieResponse
+	var movie MovieResponseWithActors
 	err := db.QueryRow(query, uuid).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
 	if err != nil {
 		log.Printf("Error getting movie by id: %v\n", err)
-		return MovieResponse{}, err
+		return MovieResponseWithActors{}, err
 	}
+
+	actors, err := m.getActorsOfAMovie(db, uuid)
+	if err != nil {
+		log.Printf("Error getting actors of movie %v, %v", movie.Title, err)
+		return MovieResponseWithActors{}, err
+	}
+	movie.Actors = actors
 
 	return movie, nil
 }
