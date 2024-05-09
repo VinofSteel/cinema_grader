@@ -172,14 +172,14 @@ func Test_MoviesRoutes(t *testing.T) {
 			route:       fmt.Sprintf("/movies/%v", movieResponses[3].ID),
 			method:      "PATCH",
 			data: map[string]interface{}{
-				"title":     "New title",
-				"director":  "New director",
+				"title":       "New title",
+				"director":    "New director",
 				"releaseDate": "1990-10-10",
 			},
 			expectedCode: 200,
 			expectedResponse: models.MovieResponse{
-				Title:     "New title",
-				Director:  "New director",
+				Title:       "New title",
+				Director:    "New director",
 				ReleaseDate: "1990-10-10T00:00:00Z",
 			},
 			testType: "update",
