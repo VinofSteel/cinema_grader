@@ -147,6 +147,25 @@ func Test_MoviesRoutes(t *testing.T) {
 			responseType: "struct",
 			testType:     "global-error",
 		},
+		// Delete requests
+		{
+			description:      "DELETE BY ID - Passing an uuid that exists in DB - Success Case",
+			route:            fmt.Sprintf("/movies/%v", movieResponses[2].ID),
+			method:           "DELETE",
+			expectedCode:     204,
+			expectedResponse: movieResponses[2],
+			testType:         "delete",
+		},
+		{
+			description:  "DELETE BY ID - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/movies/%v", "testeasdasd"),
+			method:       "DELETE",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			testType: "global-error",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -274,6 +293,20 @@ func Test_MoviesRoutes(t *testing.T) {
 
 		if testCase.testType == "global-error" {
 			assert.Equal(t, testCase.expectedResponse.(GlobalErrorHandlerResp).Message, string(responseBody))
+		}
+
+		if testCase.testType == "delete" {
+			movieResp, err := MovieModel.GetMovieByIdWithActors(db, testCase.expectedResponse.(models.MovieResponseWithActors).ID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					assert.Fail(t, "movie not found in database when getting by id", testCase.expectedResponse.(models.MovieResponseWithActors).ID)
+				}
+
+				assert.Fail(t, "Error when getting movie by id", err)
+			}
+
+			assert.Equal(t, movieResp.DeletedAt.Valid, true, "deletedAt date is not valid after executing delete request on actor")
+			assert.NotEqual(t, movieResp.DeletedAt.Time, time.Time{}, "deleteAt time should be the time of deletion, not a 0 value")
 		}
 	}
 }
