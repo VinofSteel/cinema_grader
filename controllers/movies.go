@@ -37,7 +37,6 @@ func (m *Movie) CreateMovie(c *fiber.Ctx) error {
 		return nil
 	}
 
-	// @TODO: Check if movie already exists in DB
 	existingMovie, err := MovieModel.GetMovieByTitle(m.DB, movieBody.Title)
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -286,8 +285,8 @@ func (m *Movie) UpdateMovie(c *fiber.Ctx) error {
 	}
 
 	// Verifying that the title is not a duplicate
-	movieTitleResponse, err := MovieModel.GetMovieByTitle(m.DB, movieBody.Title)
-	if err == nil && movieTitleResponse.ID != uuid {
+	existingMovie, err := MovieModel.GetMovieByTitle(m.DB, movieBody.Title)
+	if err == nil && existingMovie.ID != uuid {
 		return &fiber.Error{
 			Code:    fiber.StatusBadRequest,
 			Message: "Movie with this title already exists",

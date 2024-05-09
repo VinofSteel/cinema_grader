@@ -166,6 +166,35 @@ func Test_MoviesRoutes(t *testing.T) {
 			},
 			testType: "global-error",
 		},
+		// Update requests
+		{
+			description: "UPDATE - Update movie info (all keys) - Success Case",
+			route:       fmt.Sprintf("/movies/%v", movieResponses[3].ID),
+			method:      "PATCH",
+			data: map[string]interface{}{
+				"title":     "New title",
+				"director":  "New director",
+				"releaseDate": "1990-10-10",
+			},
+			expectedCode: 200,
+			expectedResponse: models.MovieResponse{
+				Title:     "New title",
+				Director:  "New director",
+				ReleaseDate: "1990-10-10T00:00:00Z",
+			},
+			testType: "update",
+		},
+		{
+			description:  "UPDATE - Passing an invalid uuid - Error Case",
+			route:        "/movies/09ehrgf",
+			method:       "PATCH",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -307,6 +336,32 @@ func Test_MoviesRoutes(t *testing.T) {
 
 			assert.Equal(t, movieResp.DeletedAt.Valid, true, "deletedAt date is not valid after executing delete request on actor")
 			assert.NotEqual(t, movieResp.DeletedAt.Time, time.Time{}, "deleteAt time should be the time of deletion, not a 0 value")
+		}
+
+		if testCase.testType == "update" {
+			var respStruct models.MovieResponse
+			var respSlice []models.MovieResponse
+
+			if testCase.responseType == "slice" {
+				if err := json.Unmarshal(responseBody, &respSlice); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			} else {
+				if err := json.Unmarshal(responseBody, &respStruct); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			}
+
+			compareMovieResponses := func(t *testing.T, expected, actual models.MovieResponse) {
+				expected.ID = uuid.Nil
+
+				assert.Equal(t, expected.Title, actual.Title, "Title should be updated")
+				assert.Equal(t, expected.Director, actual.Director, "Director should be updated")
+				assert.Equal(t, expected.ReleaseDate, actual.ReleaseDate, "ReleaseDate should be updated")
+				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
+			}
+
+			compareMovieResponses(t, testCase.expectedResponse.(models.MovieResponse), respStruct)
 		}
 	}
 }

@@ -222,8 +222,6 @@ func Test_ActorRoutes(t *testing.T) {
 			responseType: "struct",
 			testType:     "global-error",
 		},
-
-		//@TODO: Do tests for getting id with movies
 	}
 
 	for _, testCase := range testCases {
@@ -462,7 +460,7 @@ func Test_ActorRoutes(t *testing.T) {
 				assert.Equal(t, expected.Name, actual.Name, "Name should be updated")
 				assert.Equal(t, expected.Surname, actual.Surname, "Surname should be updated")
 				assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday should be updated")
-				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
 			}
 
 			compareActorResponses(t, testCase.expectedResponse.(models.ActorResponse), respStruct)
