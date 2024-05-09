@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -34,6 +35,12 @@ type MovieBody struct {
 
 	CreatorId string   `json:"creatorId" validate:"required,isadminuuid"`
 	Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
+}
+
+type MovieEditBody struct {
+	Title       string `json:"title" validate:"omitempty"`
+	Director    string `json:"director" validate:"omitempty"`
+	ReleaseDate string `json:"releaseDate" validate:"omitempty,datetime=2006-01-02"`
 }
 
 type MovieResponse struct {
@@ -323,4 +330,45 @@ func (m *MovieModel) DeleteMovieById(db *sql.DB, uuid uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (m *MovieModel) UpdateMovieById(db *sql.DB, uuid uuid.UUID, body MovieEditBody) (MovieResponse, error) {
+	log.Printf("Updating movie with uuid %s in DB... \n", uuid)
+
+	var updateQueryBuilder strings.Builder
+	var args []interface{}
+
+	updateQueryBuilder.WriteString("UPDATE movies SET ")
+
+	argIndex := 1
+	if body.Title != "" {
+		updateQueryBuilder.WriteString("title = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Title)
+		argIndex++
+	}
+
+	if body.Director != "" {
+		updateQueryBuilder.WriteString("director = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Director)
+		argIndex++
+	}
+
+	if body.ReleaseDate != "" {
+		updateQueryBuilder.WriteString("release_date = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.ReleaseDate)
+		argIndex++
+	}
+
+	updateQueryBuilder.WriteString("updated_at = CURRENT_TIMESTAMP, ")
+	query := strings.TrimSuffix(updateQueryBuilder.String(), ", ")
+	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id;"
+	args = append(args, uuid)
+
+	var movie MovieResponse
+	if err := db.QueryRow(query, args...).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId); err != nil {
+		log.Printf("Error updating movie by uuid: %v \n", err)
+		return MovieResponse{}, nil
+	}
+
+	return movie, nil
 }

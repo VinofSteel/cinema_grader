@@ -284,5 +284,3 @@ func (a *Actor) UpdateActor(c *fiber.Ctx) error {
 	c.Status(fiber.StatusOK).JSON(actorResponse)
 	return nil
 }
-
-// @TODO: Make controller method to get actor with movies

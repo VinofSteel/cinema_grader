@@ -41,7 +41,7 @@ func (m *Movie) CreateMovie(c *fiber.Ctx) error {
 	existingMovie, err := MovieModel.GetMovieByTitle(m.DB, movieBody.Title)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			log.Println("Error movie user by title:", err)
+			log.Println("Error getting movie user by title:", err)
 			return &fiber.Error{
 				Code:    fiber.StatusInternalServerError,
 				Message: "Unknown error",
@@ -238,5 +238,71 @@ func (m *Movie) DeleteMovie(c *fiber.Ctx) error {
 	}
 
 	c.Status(fiber.StatusNoContent)
+	return nil
+}
+
+func (m *Movie) UpdateMovie(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	_, err = MovieModel.GetMovieByIdWithActors(m.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Movie id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "Movie id not found in database",
+			}
+		}
+
+		log.Println("Error getting movie by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	var movieBody models.MovieEditBody
+	if err := c.BodyParser(&movieBody); err != nil {
+		log.Println("Error parsing JSON body:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error while parsing JSON body",
+		}
+	}
+
+	// Validating input data. We return "nil" because the ValidateData function sends a response back by itself and we need to return here to stop the function.
+	if valid := validation.ValidateData(c, m.Validate, movieBody); !valid {
+		return nil
+	}
+
+	// Verifying that the title is not a duplicate
+	movieTitleResponse, err := MovieModel.GetMovieByTitle(m.DB, movieBody.Title)
+	if err == nil && movieTitleResponse.ID != uuid {
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Movie with this title already exists",
+		}
+	}
+
+	movieResponse, err := MovieModel.UpdateMovieById(m.DB, uuid, movieBody)
+	if err != nil {
+		log.Println("Error updating movie in DB:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	c.Status(fiber.StatusOK).JSON(movieResponse)
 	return nil
 }

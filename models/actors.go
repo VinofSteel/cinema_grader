@@ -260,9 +260,8 @@ func (a *ActorModel) UpdateActorById(db *sql.DB, uuid uuid.UUID, body ActorEditB
 	args = append(args, uuid)
 
 	var actor ActorResponse
-	err := db.QueryRow(query, args...).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId)
-	if err != nil {
-		log.Printf("Error updating actor by uuid: %v\n", err)
+	if err := db.QueryRow(query, args...).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
+		log.Printf("Error updating actor by uuid: %v \n", err)
 		return ActorResponse{}, err
 	}
 

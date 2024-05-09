@@ -173,7 +173,7 @@ func InsertMockedActorsInDB(db *sql.DB, actors []models.ActorBody) []models.Acto
 
 func getActorsOfAMovie(db *sql.DB, movieID uuid.UUID) ([]models.ActorResponse, error) {
 	query := `SELECT 
-        a.id, a.name, a.surname, a.birthday, a.created_at, a.updated_at, a.deleted_at 
+        a.id, a.name, a.surname, a.birthday, a.created_at, a.updated_at, a.deleted_at, a.creator_id 
         FROM actors a
         	JOIN movies_actors ma ON a.id = ma.actor_id
         		WHERE ma.movie_id = $1;`
@@ -187,7 +187,7 @@ func getActorsOfAMovie(db *sql.DB, movieID uuid.UUID) ([]models.ActorResponse, e
 	var actors []models.ActorResponse
 	for rows.Next() {
 		var actor models.ActorResponse
-		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt); err != nil {
+		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
 			return nil, err
 		}
 		actors = append(actors, actor)
