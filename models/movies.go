@@ -68,10 +68,10 @@ var actorModel ActorModel
 // Internal methods
 func (m *MovieModel) getActorsOfAMovie(db *sql.DB, movieID uuid.UUID) ([]ActorResponse, error) {
 	query := `SELECT 
-        a.id, a.name, a.surname, a.birthday, a.created_at, a.updated_at, a.deleted_at 
+        a.id, a.name, a.surname, a.birthday, a.created_at, a.updated_at, a.deleted_at, a.creator_id
         FROM actors a
         	JOIN movies_actors ma ON a.id = ma.actor_id
-        		WHERE ma.movie_id = $1;`
+        		WHERE ma.movie_id = $1 AND a.deleted_at IS NULL;`
 
 	rows, err := db.Query(query, movieID)
 	if err != nil {
@@ -82,7 +82,7 @@ func (m *MovieModel) getActorsOfAMovie(db *sql.DB, movieID uuid.UUID) ([]ActorRe
 	var actors []ActorResponse
 	for rows.Next() {
 		var actor ActorResponse
-		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt); err != nil {
+		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
 			return nil, err
 		}
 		actors = append(actors, actor)

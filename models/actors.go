@@ -184,13 +184,43 @@ func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorRe
 func (a *ActorModel) DeleteActorById(db *sql.DB, uuid uuid.UUID) error {
 	log.Printf("Deleting actor with uuid %s in DB... \n", uuid)
 
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("Error beginning transaction made while deleting actor by id: %v\n", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			log.Printf("Rolling back transaction made while deleting actor by id due to error: %v\n", err)
+			tx.Rollback()
+			return
+		}
+	}()
+
+	// Delete entries from the pivot table if they exist
+	deleteMoviesQuery := `DELETE FROM movies_actors WHERE actor_id = $1;`
+
+	_, err = tx.Exec(deleteMoviesQuery, uuid)
+	if err != nil {
+		log.Printf("Error deleting actor's associations with movies while deleting actor by id: %v\n", err)
+		return err
+	}
+
+	// Deleting actor per se
 	query := `UPDATE actors 
 		SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
 		WHERE id = $1 AND deleted_at ISNULL;`
 
-	_, err := db.Exec(query, uuid)
+	_, err = tx.Exec(query, uuid)
 	if err != nil {
 		log.Printf("Error deleting actor by uuid: %v\n", err)
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("Error committing transaction made while deleting actor by id: %v\n", err)
 		return err
 	}
 
