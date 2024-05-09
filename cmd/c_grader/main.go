@@ -90,6 +90,7 @@ func main() {
 	app.Post("/movies", middleware.VerifyAdmin, movieController.CreateMovie)
 	app.Get("/movies", movieController.ListAllMoviesInDB)
 	app.Get("/movies/:uuid", movieController.GetMovie)
+	app.Delete("/movies/:uuid", middleware.VerifyAdmin, movieController.DeleteMovie)
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }

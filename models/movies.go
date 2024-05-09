@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"sort"
 	"strings"
@@ -135,6 +136,11 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 			if err != nil {
 				log.Printf("Trying to existing non-existant actor %v to a movie: %v\n", actorUUID, err)
 				errCh <- err
+				return
+			}
+
+			if actorResponse.DeletedAt.Valid {
+				errCh <- fmt.Errorf("trying to insert deleted actor with ID %v and name %v into movie with title %v", actorResponse.ID, actorResponse.Name, movieInfo.Title)
 				return
 			}
 			actorInfoCh <- actorResponse
@@ -301,4 +307,20 @@ func (m *MovieModel) GetMovieByIdWithActors(db *sql.DB, uuid uuid.UUID) (MovieRe
 	movie.Actors = actors
 
 	return movie, nil
+}
+
+func (m *MovieModel) DeleteMovieById(db *sql.DB, uuid uuid.UUID) error {
+	log.Printf("Deleting movie with uuid %s in DB... \n", uuid)
+
+	query := `UPDATE movies 
+		SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
+		WHERE id = $1 AND deleted_at ISNULL;`
+
+	_, err := db.Exec(query, uuid)
+	if err != nil {
+		log.Printf("Error deleting movie by uuid: %v\n", err)
+		return err
+	}
+
+	return nil
 }

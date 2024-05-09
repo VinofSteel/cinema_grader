@@ -207,6 +207,7 @@ func TestMain(m *testing.M) {
 	App.Post("/movies", movieController.CreateMovie)
 	App.Get("/movies", movieController.ListAllMoviesInDB)
 	App.Get("/movies/:uuid", movieController.GetMovie)
+	App.Delete("/movies/:uuid", movieController.DeleteMovie)
 
 	// Run tests
 	exitCode := m.Run()
