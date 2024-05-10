@@ -43,6 +43,10 @@ type MovieEditBody struct {
 	ReleaseDate string `json:"releaseDate" validate:"omitempty,datetime=2006-01-02"`
 }
 
+type MovieActorsBody struct {
+	Actors []string `json:"actors" validate:"required,unique,validactorslice"`
+}
+
 type MovieResponse struct {
 	ID           uuid.UUID    `json:"id"`
 	Title        string       `json:"title"`
@@ -130,7 +134,7 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 	for i, actorID := range movieInfo.Actors {
 		actorUUID, err := uuid.Parse(actorID)
 		if err != nil {
-			log.Printf("Error parsing movie id into uuid: %v\n", err)
+			log.Printf("Error parsing actor id into uuid: %v\n", err)
 			return MovieResponseWithActors{}, err
 		}
 
@@ -141,7 +145,7 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 
 			actorResponse, err := actorModel.GetActorById(db, actorUUID)
 			if err != nil {
-				log.Printf("Trying to existing non-existant actor %v to a movie: %v\n", actorUUID, err)
+				log.Printf("Trying to associate non-existant actor %v to a movie: %v\n", actorUUID, err)
 				errCh <- err
 				return
 			}
@@ -371,4 +375,58 @@ func (m *MovieModel) UpdateMovieById(db *sql.DB, uuid uuid.UUID, body MovieEditB
 	}
 
 	return movie, nil
+}
+
+func (m *MovieModel) InsertActorsRelationshipsWithMovie(db *sql.DB, id uuid.UUID, body MovieActorsBody) error {
+	log.Printf("Associating actors to movie with uuid %s in DB... \n", id)
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(body.Actors))
+	actorInfoCh := make(chan ActorResponse, len(body.Actors))
+	for _, actorID := range body.Actors {
+		actorUUID, err := uuid.Parse(actorID)
+		if err != nil {
+			log.Printf("Error parsing actor id into uuid: %v\n", err)
+			return err
+		}
+
+		wg.Add(1)
+		go func(actorUUID uuid.UUID) {
+			defer wg.Done()
+
+			actorResponse, err := actorModel.GetActorById(db, actorUUID)
+			if err != nil {
+				log.Printf("Trying to associate non-existant actor %v to a movie: %v\n", actorUUID, err)
+				errCh <- err
+				return
+			}
+
+			if actorResponse.DeletedAt.Valid {
+				errCh <- fmt.Errorf("trying to insert deleted actor with ID %v and name %v into movie with id %v", actorResponse.ID, actorResponse.Name, id)
+				return
+			}
+			actorInfoCh <- actorResponse
+
+			query := `INSERT INTO movies_actors (actor_id, movie_id) VALUES ($1, $2)`
+			_, err = db.Exec(query, actorUUID, id)
+			if err != nil {
+				log.Printf("Error associating actor %v with movie: %v\n", actorUUID, err)
+				errCh <- err
+				return
+			}
+		}(actorUUID)
+	}
+
+	wg.Wait()
+	close(errCh)
+	close(actorInfoCh)
+
+	for err := range errCh {
+		if err != nil {
+			log.Printf("Error in insertion goroutine: %v", err)
+			return err
+		}
+	}
+
+	return nil
 }

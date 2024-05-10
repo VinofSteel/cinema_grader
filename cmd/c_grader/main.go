@@ -88,11 +88,11 @@ func main() {
 
 	// Routes - Movie
 	app.Post("/movies", middleware.VerifyAdmin, movieController.CreateMovie)
+	app.Post("/movies/:uuid/actors", middleware.VerifyAdmin, movieController.CreateActorRelationshipWithMovie)
 	app.Get("/movies", movieController.ListAllMoviesInDB)
 	app.Get("/movies/:uuid", movieController.GetMovie)
 	app.Delete("/movies/:uuid", middleware.VerifyAdmin, movieController.DeleteMovie)
 	app.Patch("/movies/:uuid", middleware.VerifyAdmin, movieController.UpdateMovie)
-	// @TODO: Add route to add actors to an existing movie
 	// @TODO: Add route to remove actors from an existing movie
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
