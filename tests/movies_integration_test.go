@@ -67,6 +67,50 @@ func Test_MoviesRoutes(t *testing.T) {
 			},
 			testType: "global-error",
 		},
+		{
+			description: "POST - Add new actors to a movie - Success Case",
+			route:       fmt.Sprintf("/movies/%v/actors", movieResponses[4].ID),
+			method:      "POST",
+			data: map[string]interface{}{
+				"actors": []string{actorResponses[0].ID.String()},
+			},
+			expectedCode: 204,
+			expectedResponse: movieResponses[4],
+			testType: "success-movies-actors",
+		},
+		{
+			description: "POST - Add repeat actors to a movie - Error Case",
+			route:       fmt.Sprintf("/movies/%v/actors", movieResponses[3].ID),
+			method:      "POST",
+			data: map[string]interface{}{
+				"actors": []string{actorResponses[3].ID.String()},
+			},
+			expectedCode: 400,
+			expectedResponse: movieResponses[3],
+			testType: "success-movies-actors", // This still passes because the test only checks if the relationship exists and, well, it already does.
+		},
+		{
+			description:  "POST - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/movies/%v/actors", uuid.New()),
+			method:       "POST",
+			expectedCode: 404,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Movie id not found in database",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
+		{
+			description:  "POST - Passing an invalid uuid - Error Case",
+			route:        "/movies/testestetsts/actors",
+			method:       "POST",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
 		// Get requests
 		{
 			description:  "GET - All movies with basic query params and with actors - Success Case", // We don't do gigantic offsets and limits to not need to mock 10 things
@@ -362,6 +406,26 @@ func Test_MoviesRoutes(t *testing.T) {
 			}
 
 			compareMovieResponses(t, testCase.expectedResponse.(models.MovieResponse), respStruct)
+		}
+
+		if testCase.testType == "success-movies-actors" {
+			movieResp, err := MovieModel.GetMovieByIdWithActors(db, testCase.expectedResponse.(models.MovieResponseWithActors).ID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					assert.Fail(t, "movie not found in database when getting by id", testCase.expectedResponse.(models.MovieResponseWithActors).ID)
+				}
+
+				assert.Fail(t, "Error when getting movie by id", err)
+			}
+
+			var actorWasInsertedInMovie bool
+			for _, actor := range movieResp.Actors {
+				if actor.ID.String() == testCase.data["actors"].([]string)[0] {
+					actorWasInsertedInMovie = true
+				}
+			}
+
+			assert.Equal(t, actorWasInsertedInMovie, true, "actor was not inserted into pivot table and relationship was not formed")
 		}
 	}
 }
