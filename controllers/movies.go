@@ -40,7 +40,7 @@ func (m *Movie) CreateMovie(c *fiber.Ctx) error {
 	existingMovie, err := MovieModel.GetMovieByTitle(m.DB, movieBody.Title)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			log.Println("Error getting movie user by title:", err)
+			log.Println("Error getting movie by title:", err)
 			return &fiber.Error{
 				Code:    fiber.StatusInternalServerError,
 				Message: "Unknown error",

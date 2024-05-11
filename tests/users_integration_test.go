@@ -184,6 +184,11 @@ func TestMain(m *testing.M) {
 		Validate: validate,
 	}
 
+	commentController := controllers.Comment {
+		DB:       db,
+		Validate: validate,
+	}
+
 	// Routes - Session
 	App.Post("/login", sessionController.HandleLogin)
 	App.Post("/logout", sessionController.HandleLogout)
@@ -211,6 +216,9 @@ func TestMain(m *testing.M) {
 	App.Delete("/movies/:uuid", movieController.DeleteMovie)
 	App.Delete("/movies/:uuid/actors", movieController.DeleteActorsRelationshipsWithMovie)
 	App.Patch("/movies/:uuid", movieController.UpdateMovie)
+
+	// Routes - Comments
+	App.Post("/comments/:uuid", commentController.CreateComment)
 
 	// Run tests
 	exitCode := m.Run()

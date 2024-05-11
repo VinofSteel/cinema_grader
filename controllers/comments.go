@@ -33,6 +33,23 @@ func (com *Comment) CreateComment(c *fiber.Ctx) error {
 		}
 	}
 
+	_, err = UserModel.GetUserById(com.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("User id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "User id not found in database",
+			}
+		}
+
+		log.Println("Error getting user by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
 	var commentBody models.CommentBody
 	if err := c.BodyParser(&commentBody); err != nil {
 		log.Println("Error parsing JSON body:", err)
