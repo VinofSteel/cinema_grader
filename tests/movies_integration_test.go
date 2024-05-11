@@ -101,7 +101,7 @@ func Test_MoviesRoutes(t *testing.T) {
 			testType:     "global-error",
 		},
 		{
-			description:  "POST - Passing an invalid uuid - Error Case",
+			description:  "POST WITH ID - Passing an invalid uuid - Error Case",
 			route:        "/movies/testestetsts/actors",
 			method:       "POST",
 			expectedCode: 400,
@@ -210,6 +210,50 @@ func Test_MoviesRoutes(t *testing.T) {
 			},
 			testType: "global-error",
 		},
+		{
+			description: "DELETE WITH ID - Delete existing actors to a movie - Success Case",
+			route:       fmt.Sprintf("/movies/%v/actors", movieResponses[4].ID),
+			method:      "DELETE",
+			data: map[string]interface{}{
+				"actors": []string{actorResponses[0].ID.String()},
+			},
+			expectedCode:     204,
+			expectedResponse: movieResponses[4],
+			testType:         "success-delete-movies-actors",
+		},
+		{
+			description: "DELETE WITH ID - Deleting actors that already don't exist on a movie - Error Case",
+			route:       fmt.Sprintf("/movies/%v/actors", movieResponses[3].ID),
+			method:      "DELETE",
+			data: map[string]interface{}{
+				"actors": []string{actorResponses[2].ID.String()},
+			},
+			expectedCode:     400,
+			expectedResponse: movieResponses[3],
+			testType:         "success-delete-movies-actors", // This still passes because the test only checks if the relationship exists and, well, it already does.
+		},
+		{
+			description:  "DELETE WITH ID - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/movies/%v/actors", uuid.New()),
+			method:       "DELETE",
+			expectedCode: 404,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Movie id not found in database",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
+		{
+			description:  "DELETE WITH ID - Passing an invalid uuid - Error Case",
+			route:        "/movies/testestetsts/actors",
+			method:       "DELETE",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
 		// Update requests
 		{
 			description: "UPDATE - Update movie info (all keys) - Success Case",
@@ -246,7 +290,7 @@ func Test_MoviesRoutes(t *testing.T) {
 		defer db.Close()
 
 		var jsonData []byte
-		if testCase.method != "GET" && testCase.method != "DELETE" {
+		if testCase.data != nil {
 			var err error
 			jsonData, err = json.Marshal(testCase.data)
 			if err != nil {
@@ -255,7 +299,7 @@ func Test_MoviesRoutes(t *testing.T) {
 		}
 
 		var req *http.Request
-		if testCase.method != "GET" && testCase.method != "DELETE" {
+		if testCase.data != nil {
 			req = httptest.NewRequest(testCase.method, testCase.route, bytes.NewBuffer(jsonData))
 		} else {
 			req = httptest.NewRequest(testCase.method, testCase.route, nil)
@@ -426,6 +470,26 @@ func Test_MoviesRoutes(t *testing.T) {
 			}
 
 			assert.Equal(t, actorWasInsertedInMovie, true, "actor was not inserted into pivot table and relationship was not formed")
+		}
+
+		if testCase.testType == "success-delete-movies-actors" {
+			movieResp, err := MovieModel.GetMovieByIdWithActors(db, testCase.expectedResponse.(models.MovieResponseWithActors).ID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					assert.Fail(t, "movie not found in database when getting by id", testCase.expectedResponse.(models.MovieResponseWithActors).ID)
+				}
+
+				assert.Fail(t, "Error when getting movie by id", err)
+			}
+
+			var actorWasNotDeletedFromMovie bool
+			for _, actor := range movieResp.Actors {
+				if actor.ID.String() == testCase.data["actors"].([]string)[0] {
+					actorWasNotDeletedFromMovie = true
+				}
+			}
+
+			assert.Equal(t, actorWasNotDeletedFromMovie, false, "actor was not inserted into pivot table and relationship was not formed")
 		}
 	}
 }

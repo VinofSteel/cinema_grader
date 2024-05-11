@@ -94,7 +94,6 @@ func main() {
 	app.Delete("/movies/:uuid", middleware.VerifyAdmin, movieController.DeleteMovie)
 	app.Delete("/movies/:uuid/actors", middleware.VerifyAdmin, movieController.DeleteActorsRelationshipsWithMovie)
 	app.Patch("/movies/:uuid", middleware.VerifyAdmin, movieController.UpdateMovie)
-	// @TODO: Add route to remove actors from an existing movie
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }
