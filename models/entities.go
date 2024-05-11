@@ -1,12 +1,5 @@
 package models
 
-import (
-	"database/sql"
-	"time"
-
-	"github.com/google/uuid"
-)
-
 const UsersTableQuery string = `
 	CREATE TABLE IF NOT EXISTS users (
 		id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -62,18 +55,6 @@ const MoviesActorsPivotTableQuery string = `
 		FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE RESTRICT
 	);
 `
-
-type CommentModel struct {
-	ID        uuid.UUID    `json:"id"`
-	Comment   string       `json:"comment"`
-	Grade     float64      `json:"grade"`
-	CreatedAt time.Time    `json:"createdAt"`
-	UpdatedAt time.Time    `json:"updatedAt"`
-	DeletedAt sql.NullTime `json:"deletedAt"`
-
-	UserId  string `json:"userId"`
-	MovieId string `json:"movieId"`
-}
 
 const CommentsTableQuery string = `
 	CREATE TABLE IF NOT EXISTS comments(

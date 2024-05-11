@@ -139,6 +139,13 @@ var actorUuidSliceItems = []struct {
 	{[]string{"actor1", "actor2"}, true},
 }
 
+var validUuidItems = []validateTests{
+	{"a61b6ed8-cd86-4bd9-833b-910b485471c6", true},
+	{"banana", false},
+	{"12345", false},
+	{"", false},
+}
+
 func Test_passwordValidation(t *testing.T) {
 	for _, item := range passwordItems {
 		err := validate.Var(item.Have, "password")
@@ -182,6 +189,18 @@ func Test_actorsUuidSliceValidation(t *testing.T) {
 		}
 
 		err := validate.Var(item.Have, "validactorslice")
+
+		if item.Want {
+			assert.NoError(t, err, "Unexpected error for item: %v", item)
+		} else {
+			assert.Error(t, err, "Expected error for item: %v", item)
+		}
+	}
+}
+
+func Test_uuidValidation(t *testing.T) {
+	for _, item := range validUuidItems {
+		err := validate.Var(item.Have, "isvaliduuid")
 
 		if item.Want {
 			assert.NoError(t, err, "Unexpected error for item: %v", item)

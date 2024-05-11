@@ -95,5 +95,7 @@ func main() {
 	app.Delete("/movies/:uuid/actors", middleware.VerifyAdmin, movieController.DeleteActorsRelationshipsWithMovie)
 	app.Patch("/movies/:uuid", middleware.VerifyAdmin, movieController.UpdateMovie)
 
+	// Routes - Comments
+
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }

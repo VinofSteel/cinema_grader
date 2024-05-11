@@ -55,6 +55,18 @@ func adminUuidValidation(fl validator.FieldLevel) bool {
 	return true
 }
 
+func uuidValidation(fl validator.FieldLevel) bool {
+	idField := fl.Field().String()
+
+	_, err := uuid.Parse(idField)
+	if err != nil {
+		log.Println("Error parsing uuid:", err)
+		return false
+	}
+
+	return true
+}
+
 func actorsUuidSliceValidation(fl validator.FieldLevel) bool {
 	db := NewDatabaseConn()
 	defer db.Close()
@@ -109,6 +121,7 @@ func NewValidator() *validator.Validate {
 	validate.RegisterValidation("password", passwordValidation)
 	validate.RegisterValidation("isadminuuid", adminUuidValidation)
 	validate.RegisterValidation("validactorslice", actorsUuidSliceValidation)
+	validate.RegisterValidation("isvaliduuid", uuidValidation)
 
 	return validate
 }

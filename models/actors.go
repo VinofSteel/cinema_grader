@@ -69,8 +69,8 @@ func (a *ActorModel) InsertActorInDB(db *sql.DB, actorInfo ActorBody) (ActorResp
 				RETURNING id, name, surname, birthday, created_at, updated_at, deleted_at, creator_id;`
 
 	var actor ActorResponse
-	err := db.QueryRow(query, actorInfo.Name, actorInfo.Surname, actorInfo.Birthday, actorInfo.CreatorId).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId)
-	if err != nil {
+	
+	if err := db.QueryRow(query, actorInfo.Name, actorInfo.Surname, actorInfo.Birthday, actorInfo.CreatorId).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
 		log.Printf("Error inserting actor into database: %v\n", err)
 		return ActorResponse{}, err
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/VinOfSteel/cinemagrader/models"
 	"github.com/VinOfSteel/cinemagrader/tests"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -114,12 +115,14 @@ func Test_structValidation(t *testing.T) {
 					Password  string   `json:"password" validate:"required,password"`
 					CreatorId string   `json:"creatorId" validate:"required,isadminuuid"`
 					Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
+					MovieID   string   `json:"movieId" validate:"required,isvaliduuid"`
 				}{
 					Name:      "John",
 					Email:     "john@john.com",
 					Password:  "Johnjohn123%@",
 					CreatorId: adminId,
 					Actors:    []string{actor1Id, actor2Id},
+					MovieID:   uuid.New().String(),
 				},
 			},
 			want: []ErrorResponse{},
@@ -136,12 +139,14 @@ func Test_structValidation(t *testing.T) {
 					Birthday  string   `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
 					CreatorId string   `json:"creatorId" validate:"required,isadminuuid"`
 					Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
+					MovieID   string   `json:"movieId" validate:"required,isvaliduuid"`
 				}{
 					Email:     "banana",
 					Password:  "12345",
 					Birthday:  "23/09/1997",
 					CreatorId: "asfasd2",
 					Actors:    []string{"banana", "batata"},
+					MovieID: "asuhduashd",
 				},
 			},
 			want: []ErrorResponse{
@@ -171,7 +176,7 @@ func Test_structValidation(t *testing.T) {
 				},
 				{
 					Error:        true,
-					FailedField:  "creatorid",
+					FailedField:  "creatorId",
 					Tag:          "isadminuuid",
 					ErrorMessage: "The creatorId field needs to be a valid uuid that belongs to an admin user.",
 				},
@@ -180,6 +185,12 @@ func Test_structValidation(t *testing.T) {
 					FailedField:  "actors",
 					Tag:          "validactorslice",
 					ErrorMessage: "The actors field needs to be a valid array that contains uuids of existing actors.",
+				},
+				{
+					Error:        true,
+					FailedField:  "movieId",
+					Tag:          "isvaliduuid",
+					ErrorMessage: "The movieId field needs to be a valid uuid.",
 				},
 			},
 		},
