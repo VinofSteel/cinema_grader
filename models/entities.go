@@ -60,7 +60,7 @@ const CommentsTableQuery string = `
 	CREATE TABLE IF NOT EXISTS comments(
 		id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 		comment TEXT NOT NULL,
-		grade DECIMAL(3, 1),
+		grade DECIMAL(3, 1) CHECK (grade >= 1 AND grade <= 5),
 		created_at TIMESTAMP DEFAULT NOW(),
 		updated_at TIMESTAMP DEFAULT NOW(),
 		deleted_at TIMESTAMP,

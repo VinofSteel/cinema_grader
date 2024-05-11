@@ -116,6 +116,7 @@ func Test_structValidation(t *testing.T) {
 					CreatorId string   `json:"creatorId" validate:"required,isadminuuid"`
 					Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
 					MovieID   string   `json:"movieId" validate:"required,isvaliduuid"`
+					Grade     float64  `json:"grade" validate:"omitempty,isvalidgrade"`
 				}{
 					Name:      "John",
 					Email:     "john@john.com",
@@ -123,6 +124,7 @@ func Test_structValidation(t *testing.T) {
 					CreatorId: adminId,
 					Actors:    []string{actor1Id, actor2Id},
 					MovieID:   uuid.New().String(),
+					Grade:     5.0,
 				},
 			},
 			want: []ErrorResponse{},
@@ -140,13 +142,15 @@ func Test_structValidation(t *testing.T) {
 					CreatorId string   `json:"creatorId" validate:"required,isadminuuid"`
 					Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
 					MovieID   string   `json:"movieId" validate:"required,isvaliduuid"`
+					Grade     float64  `json:"grade" validate:"omitempty,isvalidgrade"`
 				}{
 					Email:     "banana",
 					Password:  "12345",
 					Birthday:  "23/09/1997",
 					CreatorId: "asfasd2",
 					Actors:    []string{"banana", "batata"},
-					MovieID: "asuhduashd",
+					MovieID:   "asuhduashd",
+					Grade:     0.5,
 				},
 			},
 			want: []ErrorResponse{
@@ -191,6 +195,12 @@ func Test_structValidation(t *testing.T) {
 					FailedField:  "movieId",
 					Tag:          "isvaliduuid",
 					ErrorMessage: "The movieId field needs to be a valid uuid.",
+				},
+				{
+					Error:        true,
+					FailedField:  "grade",
+					Tag:          "isvalidgrade",
+					ErrorMessage: "The grade field needs to a float between 1.0 and 5.0, with only one decimal field.",
 				},
 			},
 		},

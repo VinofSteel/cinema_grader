@@ -146,6 +146,20 @@ var validUuidItems = []validateTests{
 	{"", false},
 }
 
+var validGrades = []struct {
+	Have float64
+	Want bool
+}{
+	{1, true},
+	{1.1, true},
+	{3.55, true},
+	{4, true},
+	{0, false},   
+	{5.1, false}, 
+	{0.3, false}, 
+	{8, false},   
+}
+
 func Test_passwordValidation(t *testing.T) {
 	for _, item := range passwordItems {
 		err := validate.Var(item.Have, "password")
@@ -201,6 +215,18 @@ func Test_actorsUuidSliceValidation(t *testing.T) {
 func Test_uuidValidation(t *testing.T) {
 	for _, item := range validUuidItems {
 		err := validate.Var(item.Have, "isvaliduuid")
+
+		if item.Want {
+			assert.NoError(t, err, "Unexpected error for item: %v", item)
+		} else {
+			assert.Error(t, err, "Expected error for item: %v", item)
+		}
+	}
+}
+
+func Test_gradeValidation(t *testing.T) {
+	for _, item := range validGrades {
+		err := validate.Var(item.Have, "isvalidgrade")
 
 		if item.Want {
 			assert.NoError(t, err, "Unexpected error for item: %v", item)

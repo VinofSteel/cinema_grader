@@ -113,6 +113,21 @@ func actorsUuidSliceValidation(fl validator.FieldLevel) bool {
 	return true
 }
 
+func gradeValidation(fl validator.FieldLevel) bool {
+	grade, ok := fl.Field().Interface().(float64)
+	if !ok {
+		return false
+	}
+
+	const epsilon = 0.000001 // Tolerance for floating-point comparison
+
+	if grade < 1.0-epsilon || grade > 5.0+epsilon {
+		return false
+	}
+
+	return true
+}
+
 func NewValidator() *validator.Validate {
 	// Initializing a single instance of the validator
 	validate := validator.New(validator.WithRequiredStructEnabled())
@@ -122,6 +137,7 @@ func NewValidator() *validator.Validate {
 	validate.RegisterValidation("isadminuuid", adminUuidValidation)
 	validate.RegisterValidation("validactorslice", actorsUuidSliceValidation)
 	validate.RegisterValidation("isvaliduuid", uuidValidation)
+	validate.RegisterValidation("isvalidgrade", gradeValidation)
 
 	return validate
 }

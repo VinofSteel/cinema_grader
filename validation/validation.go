@@ -18,29 +18,29 @@ type ErrorResponse struct {
 }
 
 func firstAndLastToLower(s string) string {
-    if len(s) == 0 {
-        return s
-    }
+	if len(s) == 0 {
+		return s
+	}
 
-    firstRune, size := utf8.DecodeRuneInString(s)
-    if firstRune == utf8.RuneError && size <= 1 {
-        return s
-    }
+	firstRune, size := utf8.DecodeRuneInString(s)
+	if firstRune == utf8.RuneError && size <= 1 {
+		return s
+	}
 
-    lastRune, lastSize := utf8.DecodeLastRuneInString(s)
-    if lastRune == utf8.RuneError && lastSize <= 1 {
-        return s
-    }
+	lastRune, lastSize := utf8.DecodeLastRuneInString(s)
+	if lastRune == utf8.RuneError && lastSize <= 1 {
+		return s
+	}
 
-    firstLower := unicode.ToLower(firstRune)
-    lastLower := unicode.ToLower(lastRune)
+	firstLower := unicode.ToLower(firstRune)
+	lastLower := unicode.ToLower(lastRune)
 
-    // If the first and last characters are already lowercase, return the original string.
-    if firstRune == firstLower && lastRune == lastLower {
-        return s
-    }
+	// If the first and last characters are already lowercase, return the original string.
+	if firstRune == firstLower && lastRune == lastLower {
+		return s
+	}
 
-    return string(firstLower) + s[size:len(s)-lastSize] + string(lastLower)
+	return string(firstLower) + s[size:len(s)-lastSize] + string(lastLower)
 }
 
 func structValidation(validate *validator.Validate, data interface{}) []ErrorResponse {
@@ -70,6 +70,9 @@ func structValidation(validate *validator.Validate, data interface{}) []ErrorRes
 				elem.ErrorMessage = "The actors field needs to be a valid array that contains uuids of existing actors."
 			case "isvaliduuid":
 				elem.ErrorMessage = fmt.Sprintf("The %s field needs to be a valid uuid.", firstAndLastToLower(err.Field()))
+			case "isvalidgrade":
+				elem.ErrorMessage = fmt.Sprintf("The %s field needs to a float between 1.0 and 5.0, with only one decimal field.", firstAndLastToLower(err.Field()))
+
 			}
 
 			validationErrors = append(validationErrors, elem)
