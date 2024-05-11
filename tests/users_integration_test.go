@@ -184,7 +184,7 @@ func TestMain(m *testing.M) {
 		Validate: validate,
 	}
 
-	commentController := controllers.Comment {
+	commentController := controllers.Comment{
 		DB:       db,
 		Validate: validate,
 	}

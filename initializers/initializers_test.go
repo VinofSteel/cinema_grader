@@ -154,10 +154,10 @@ var validGrades = []struct {
 	{1.1, true},
 	{3.55, true},
 	{4, true},
-	{0, false},   
-	{5.1, false}, 
-	{0.3, false}, 
-	{8, false},   
+	{0, false},
+	{5.1, false},
+	{0.3, false},
+	{8, false},
 }
 
 func Test_passwordValidation(t *testing.T) {

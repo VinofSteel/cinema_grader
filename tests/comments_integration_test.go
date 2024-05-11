@@ -35,15 +35,15 @@ func Test_CommentsRoutes(t *testing.T) {
 			method:      "POST",
 			data: map[string]interface{}{
 				"comment": "i8fhdas8ifdhas0i fhasoif hasoif hasiof hasipodf hpaisd hpas dpoa",
-				"grade": 4,
+				"grade":   4,
 				"movieId": movieResponses[1].ID.String(),
 			},
 			expectedCode: 201,
 			expectedResponse: models.CommentResponse{
 				Comment: "i8fhdas8ifdhas0i fhasoif hasoif hasiof hasipodf hpaisd hpas dpoa",
-				Grade: 4,
+				Grade:   4,
 				MovieId: movieResponses[1].ID.String(),
-				UserId: userResponses[1].ID.String(),
+				UserId:  userResponses[1].ID.String(),
 			},
 			testType: "success",
 		},
