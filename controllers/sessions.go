@@ -27,6 +27,10 @@ type LoginBody struct {
 	Password string `json:"password" validate:"required,password"`
 }
 
+type LoginResponse struct {
+	UserID uuid.UUID `json:"userId"`
+}
+
 func createToken(uuid uuid.UUID, email string, isAdm bool) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":         uuid,
@@ -119,9 +123,10 @@ func (s *Session) HandleLogin(c *fiber.Ctx) error {
 	cookie.Secure = false // We only leave this as false because this API only runs on localhost, for real applications, this would be true.
 	cookie.HTTPOnly = true
 	cookie.Expires = time.Now().Add(time.Hour * 24 * 30)
-
 	c.Cookie(cookie)
-	c.Status(fiber.StatusNoContent)
+
+	loginResponse := LoginResponse{UserID: existingUser.ID}
+	c.Status(fiber.StatusOK).JSON(loginResponse)
 
 	return nil
 }

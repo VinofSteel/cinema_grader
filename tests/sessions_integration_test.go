@@ -8,12 +8,17 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 type LoginBody struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,password"`
+}
+
+type LoginResponse struct {
+	UserID uuid.UUID `json:"userId"`
 }
 
 func Test_SessionsRoutes(t *testing.T) {
@@ -35,7 +40,8 @@ func Test_SessionsRoutes(t *testing.T) {
 				"email":    "teste1@teste1.com",
 				"password": "testando123@Teste",
 			},
-			expectedCode: 204,
+			expectedCode: 200,
+			expectedResponse: LoginResponse{UserID: userResponses[3].ID},
 			testType:     "login-success",
 		},
 		{
@@ -113,6 +119,14 @@ func Test_SessionsRoutes(t *testing.T) {
 		assert.Equal(t, testCase.expectedCode, resp.StatusCode, "status code")
 
 		if testCase.testType == "login-success" {
+			var respStruct LoginResponse
+
+			if err := json.Unmarshal(responseBody, &respStruct); err != nil {
+				t.Fatalf("Error unmarshalling response body: %v", err)
+			}
+
+			assert.Equal(t, testCase.expectedResponse.(LoginResponse).UserID, respStruct.UserID, "UserID mismatch")
+			
 			cookies := resp.Cookies()
 			assert.Len(t, cookies, 1, "unexpected number of cookies")
 			assert.Equal(t, "Authorization", cookies[0].Name, "unexpected cookie name")
