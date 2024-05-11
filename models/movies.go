@@ -394,6 +394,8 @@ func (m *MovieModel) InsertActorsRelationshipsWithMovie(db *sql.DB, id uuid.UUID
 		go func(actorUUID uuid.UUID) {
 			defer wg.Done()
 
+			// This seems like error handling, but it's actually necessary because we
+			// only have the uuid and we need the full info of the actor.
 			actorResponse, err := actorModel.GetActorById(db, actorUUID)
 			if err != nil {
 				log.Printf("Trying to associate non-existant actor %v to a movie: %v\n", actorUUID, err)
@@ -407,10 +409,66 @@ func (m *MovieModel) InsertActorsRelationshipsWithMovie(db *sql.DB, id uuid.UUID
 			}
 			actorInfoCh <- actorResponse
 
-			query := `INSERT INTO movies_actors (actor_id, movie_id) VALUES ($1, $2)`
+			query := `INSERT INTO movies_actors (actor_id, movie_id) VALUES ($1, $2);`
 			_, err = db.Exec(query, actorUUID, id)
 			if err != nil {
 				log.Printf("Error associating actor %v with movie: %v\n", actorUUID, err)
+				errCh <- err
+				return
+			}
+		}(actorUUID)
+	}
+
+	wg.Wait()
+	close(errCh)
+	close(actorInfoCh)
+
+	for err := range errCh {
+		if err != nil {
+			log.Printf("Error in insertion goroutine: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *MovieModel) DeleteActorsRelationshipsWithMovie(db *sql.DB, id uuid.UUID, body MovieActorsBody) error {
+	log.Printf("Deleting actors associated movie with uuid %s in DB... \n", id)
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(body.Actors))
+	actorInfoCh := make(chan ActorResponse, len(body.Actors))
+	for _, actorID := range body.Actors {
+		actorUUID, err := uuid.Parse(actorID)
+		if err != nil {
+			log.Printf("Error parsing actor id into uuid: %v\n", err)
+			return err
+		}
+
+		wg.Add(1)
+		go func(actorUUID uuid.UUID) {
+			defer wg.Done()
+
+			// This seems like error handling, but it's actually necessary because we
+			// only have the uuid and we need the full info of the actor.
+			actorResponse, err := actorModel.GetActorById(db, actorUUID)
+			if err != nil {
+				log.Printf("Trying to delete non-existant actor %v from movie with ID %v\n", actorUUID, err)
+				errCh <- err
+				return
+			}
+
+			if actorResponse.DeletedAt.Valid {
+				errCh <- fmt.Errorf("trying to delete actor with ID %v and name %v from movie with ID %v", actorResponse.ID, actorResponse.Name, id)
+				return
+			}
+			actorInfoCh <- actorResponse
+
+			query := `DELETE FROM movies_actors WHERE actor_id = $1;`
+			_, err = db.Exec(query, actorUUID)
+			if err != nil {
+				log.Printf("Error deleting actor %v from movie: %v\n", actorUUID, err)
 				errCh <- err
 				return
 			}

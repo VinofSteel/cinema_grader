@@ -205,10 +205,11 @@ func TestMain(m *testing.M) {
 
 	// Routes - Movie
 	App.Post("/movies", movieController.CreateMovie)
-	App.Post("/movies/:uuid/actors", movieController.CreateActorRelationshipWithMovie)
+	App.Post("/movies/:uuid/actors", movieController.CreateActorsRelationshipsWithMovie)
 	App.Get("/movies", movieController.ListAllMoviesInDB)
 	App.Get("/movies/:uuid", movieController.GetMovie)
 	App.Delete("/movies/:uuid", movieController.DeleteMovie)
+	App.Delete("/movies/:uuid/actors", movieController.DeleteActorsRelationshipsWithMovie)
 	App.Patch("/movies/:uuid", movieController.UpdateMovie)
 
 	// Run tests

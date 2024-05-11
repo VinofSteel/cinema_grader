@@ -68,29 +68,29 @@ func Test_MoviesRoutes(t *testing.T) {
 			testType: "global-error",
 		},
 		{
-			description: "POST - Add new actors to a movie - Success Case",
+			description: "POST WITH ID - Add new actors to a movie - Success Case",
 			route:       fmt.Sprintf("/movies/%v/actors", movieResponses[4].ID),
 			method:      "POST",
 			data: map[string]interface{}{
 				"actors": []string{actorResponses[0].ID.String()},
 			},
-			expectedCode: 204,
+			expectedCode:     204,
 			expectedResponse: movieResponses[4],
-			testType: "success-movies-actors",
+			testType:         "success-movies-actors",
 		},
 		{
-			description: "POST - Add repeat actors to a movie - Error Case",
+			description: "POST WITH ID - Add repeat actors to a movie - Error Case",
 			route:       fmt.Sprintf("/movies/%v/actors", movieResponses[3].ID),
 			method:      "POST",
 			data: map[string]interface{}{
 				"actors": []string{actorResponses[3].ID.String()},
 			},
-			expectedCode: 400,
+			expectedCode:     400,
 			expectedResponse: movieResponses[3],
-			testType: "success-movies-actors", // This still passes because the test only checks if the relationship exists and, well, it already does.
+			testType:         "success-movies-actors", // This still passes because the test only checks if the relationship exists and, well, it already does.
 		},
 		{
-			description:  "POST - Passing an uuid that does not exist in DB - Error Case",
+			description:  "POST WITH ID - Passing an uuid that does not exist in DB - Error Case",
 			route:        fmt.Sprintf("/movies/%v/actors", uuid.New()),
 			method:       "POST",
 			expectedCode: 404,

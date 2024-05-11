@@ -306,7 +306,7 @@ func (m *Movie) UpdateMovie(c *fiber.Ctx) error {
 	return nil
 }
 
-func (m *Movie) CreateActorRelationshipWithMovie(c *fiber.Ctx) error {
+func (m *Movie) CreateActorsRelationshipsWithMovie(c *fiber.Ctx) error {
 	c.Accepts("application/json")
 	uuidParam := c.Params("uuid")
 
@@ -345,6 +345,11 @@ func (m *Movie) CreateActorRelationshipWithMovie(c *fiber.Ctx) error {
 		}
 	}
 
+	// Validating input data. We return "nil" because the ValidateData function sends a response back by itself and we need to return here to stop the function.
+	if valid := validation.ValidateData(c, m.Validate, movieActorsBody); !valid {
+		return nil
+	}
+
 	// Checking if trying to add an actor already in the movie to the movie
 	actorUUIDs := make(map[string]struct{})
 	for _, actorUUID := range movieResponse.Actors {
@@ -360,16 +365,82 @@ func (m *Movie) CreateActorRelationshipWithMovie(c *fiber.Ctx) error {
 		}
 	}
 
+	if err := MovieModel.InsertActorsRelationshipsWithMovie(m.DB, uuid, movieActorsBody); err != nil {
+		log.Println("Error associating actors with movie in DB:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Couldn't associate actors with movie, check your request",
+		}
+	}
+
+	c.Status(fiber.StatusNoContent)
+	return nil
+}
+
+func (m *Movie) DeleteActorsRelationshipsWithMovie(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	movieResponse, err := MovieModel.GetMovieByIdWithActors(m.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Movie id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "Movie id not found in database",
+			}
+		}
+
+		log.Println("Error getting movie by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	var movieActorsBody models.MovieActorsBody
+	if err := c.BodyParser(&movieActorsBody); err != nil {
+		log.Println("Error parsing JSON body:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error while parsing JSON body, check your request",
+		}
+	}
+
 	// Validating input data. We return "nil" because the ValidateData function sends a response back by itself and we need to return here to stop the function.
 	if valid := validation.ValidateData(c, m.Validate, movieActorsBody); !valid {
 		return nil
 	}
 
-	if err := MovieModel.InsertActorsRelationshipsWithMovie(m.DB, uuid, movieActorsBody); err != nil {
-		log.Println("Error associating actors with movie DB:", err)
+	// Checking if trying to delete an actor that is not on the movie
+	actorUUIDs := make(map[string]struct{})
+	for _, actorUUID := range movieResponse.Actors {
+		actorUUIDs[actorUUID.ID.String()] = struct{}{}
+	}
+
+	for _, actorIDInBody := range movieActorsBody.Actors {
+		if _, ok := actorUUIDs[actorIDInBody]; !ok {
+			return &fiber.Error{
+				Code:    fiber.StatusBadRequest,
+				Message: "Trying to delete an actor that is already not on the movie",
+			}
+		}
+	}
+
+	if err := MovieModel.DeleteActorsRelationshipsWithMovie(m.DB, uuid, movieActorsBody); err != nil {
+		log.Println("Error deleting actors from movie in DB:", err)
 		return &fiber.Error{
 			Code:    fiber.StatusInternalServerError,
-			Message: "Couldn't associate actors with movies, check your request",
+			Message: "Couldn't delete actors from movie, check your request",
 		}
 	}
 
