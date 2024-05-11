@@ -179,5 +179,9 @@ func Test_CommentsRoutes(t *testing.T) {
 				compareCommentResponses(t, testCase.expectedResponse.(models.CommentResponse), respStruct)
 			}
 		}
+
+		if testCase.testType == "global-error" {
+			assert.Equal(t, testCase.expectedResponse.(GlobalErrorHandlerResp).Message, string(responseBody))
+		}
 	}
 }

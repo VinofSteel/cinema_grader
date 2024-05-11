@@ -336,6 +336,13 @@ func (m *Movie) CreateActorsRelationshipsWithMovie(c *fiber.Ctx) error {
 		}
 	}
 
+	if movieResponse.DeletedAt.Valid {
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Trying to create an actor relationship on a deleted movie, check your request",
+		}
+	}
+
 	var movieActorsBody models.MovieActorsBody
 	if err := c.BodyParser(&movieActorsBody); err != nil {
 		log.Println("Error parsing JSON body:", err)

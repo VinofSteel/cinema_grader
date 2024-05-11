@@ -33,7 +33,7 @@ func (com *Comment) CreateComment(c *fiber.Ctx) error {
 		}
 	}
 
-	_, err = UserModel.GetUserById(com.DB, uuid)
+	userResponse, err := UserModel.GetUserById(com.DB, uuid)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Println("User id not found in database:", err)
@@ -47,6 +47,13 @@ func (com *Comment) CreateComment(c *fiber.Ctx) error {
 		return &fiber.Error{
 			Code:    fiber.StatusInternalServerError,
 			Message: "Unknown error",
+		}
+	}
+
+	if userResponse.DeletedAt.Valid {
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Trying to comment as a deleted user, check your request",
 		}
 	}
 
