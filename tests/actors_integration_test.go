@@ -30,7 +30,7 @@ func Test_ActorRoutes(t *testing.T) {
 	}{
 		// Post requests
 		{
-			description: "POST - Create a new actor route - Success Case",
+			description: "POST - Create a new actor route - Success Case", // Picture key not tested on purpose to make sure it is registered properly as an empty string
 			route:       "/actors",
 			method:      "POST",
 			data: map[string]interface{}{
@@ -202,12 +202,14 @@ func Test_ActorRoutes(t *testing.T) {
 				"name":     "New name",
 				"surname":  "New surname",
 				"birthday": "1990-10-10",
+				"picture":  "/pictures/actor",
 			},
 			expectedCode: 200,
 			expectedResponse: models.ActorResponse{
 				Name:     "New name",
 				Surname:  "New surname",
 				Birthday: "1990-10-10T00:00:00Z",
+				Picture:  "/pictures/actor",
 			},
 			testType: "update",
 		},
@@ -460,6 +462,7 @@ func Test_ActorRoutes(t *testing.T) {
 				assert.Equal(t, expected.Name, actual.Name, "Name should be updated")
 				assert.Equal(t, expected.Surname, actual.Surname, "Surname should be updated")
 				assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday should be updated")
+				assert.Equal(t, expected.Picture, actual.Picture, "Picture should be updated")
 				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
 			}
 

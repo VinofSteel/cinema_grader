@@ -4,12 +4,12 @@ fmt:
 	gofmt -w .
 .PHONY:fmt
 
-test:
-	go test ./... -v -count=1
+test: fmt
+	go test ./... -count=1
 .PHONY: test
 
-integration-test:
-	go test ./tests/ -v -count=1
+integration-test: fmt
+	go test ./tests/ -count=1
 .PHONY: integration-test
 
 build: fmt

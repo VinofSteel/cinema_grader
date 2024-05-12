@@ -24,11 +24,11 @@ type ActorModel struct {
 }
 
 type ActorBody struct {
-	Name      string `json:"name" validate:"required"`
-	Surname   string `json:"surname" validate:"required"`
-	Birthday  string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
-	Picture     string `json:"picture" validate:"omitempty"`
-	
+	Name     string `json:"name" validate:"required"`
+	Surname  string `json:"surname" validate:"required"`
+	Birthday string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
+	Picture  string `json:"picture" validate:"omitempty"`
+
 	CreatorId string `json:"creatorId" validate:"required,isadminuuid"`
 }
 
@@ -36,7 +36,7 @@ type ActorEditBody struct {
 	Name     string `json:"name" validate:"omitempty"`
 	Surname  string `json:"surname" validate:"omitempty"`
 	Birthday string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
-	Picture     string `json:"picture" validate:"omitempty"`
+	Picture  string `json:"picture" validate:"omitempty"`
 }
 
 type ActorResponse struct {

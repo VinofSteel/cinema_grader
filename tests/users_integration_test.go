@@ -245,7 +245,7 @@ func Test_UsersRoutes(t *testing.T) {
 	}{
 		// Post requests
 		{
-			description: "POST - Create a new user route - Success Case",
+			description: "POST - Create a new user route - Success Case", // Picture key not tested on purpose to make sure it is registered properly as an empty string
 			route:       "/users",
 			method:      "POST",
 			data: map[string]interface{}{
@@ -395,6 +395,7 @@ func Test_UsersRoutes(t *testing.T) {
 				"name":     "New name",
 				"surname":  "New surname",
 				"password": "Testando123**@",
+				"picture":  "/assets/user/123",
 				"birthday": "1990-10-10",
 			},
 			expectedCode: 200,
@@ -403,6 +404,7 @@ func Test_UsersRoutes(t *testing.T) {
 				Surname:  "New surname",
 				Email:    "teste3@teste3.com.br",
 				Birthday: "1990-10-10T00:00:00Z",
+				Picture:  "/assets/user/123",
 				IsAdm:    false,
 			},
 			testType: "update",
@@ -570,6 +572,7 @@ func Test_UsersRoutes(t *testing.T) {
 				assert.Equal(t, expected.Name, actual.Name, "Name should be updated")
 				assert.Equal(t, expected.Surname, actual.Surname, "Surname should be updated")
 				assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday should be updated")
+				assert.Equal(t, expected.Picture, actual.Picture, "Picture should be updated")
 				assert.Equal(t, expected.IsAdm, actual.IsAdm, "IsAdm should be updated")
 				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
 			}

@@ -30,7 +30,7 @@ func Test_MoviesRoutes(t *testing.T) {
 	}{
 		// Post requests
 		{
-			description: "POST - Create a new movie route - Success Case",
+			description: "POST - Create a new movie route - Success Case", // Picture key not tested on purpose to make sure it is registered properly as an empty string
 			route:       "/movies",
 			method:      "POST",
 			data: map[string]interface{}{
@@ -263,12 +263,14 @@ func Test_MoviesRoutes(t *testing.T) {
 				"title":       "New title",
 				"director":    "New director",
 				"releaseDate": "1990-10-10",
+				"picture":     "assets/movie/meu-filme",
 			},
 			expectedCode: 200,
 			expectedResponse: models.MovieResponse{
 				Title:       "New title",
 				Director:    "New director",
 				ReleaseDate: "1990-10-10T00:00:00Z",
+				Picture:     "assets/movie/meu-filme",
 			},
 			testType: "update",
 		},
@@ -446,6 +448,7 @@ func Test_MoviesRoutes(t *testing.T) {
 				assert.Equal(t, expected.Title, actual.Title, "Title should be updated")
 				assert.Equal(t, expected.Director, actual.Director, "Director should be updated")
 				assert.Equal(t, expected.ReleaseDate, actual.ReleaseDate, "ReleaseDate should be updated")
+				assert.Equal(t, expected.Picture, actual.Picture, "Picture should be updated")
 				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
 			}
 
