@@ -19,6 +19,7 @@ type MovieModel struct {
 	Director     string       `json:"director"`
 	ReleaseDate  string       `json:"releaseDate"`
 	AverageGrade float64      `json:"averageGrade"`
+	Picture      string       `json:"picture"`
 	CreatedAt    time.Time    `json:"createdAt"`
 	UpdatedAt    time.Time    `json:"updatedAt"`
 	DeletedAt    sql.NullTime `json:"deletedAt"`
@@ -32,6 +33,7 @@ type MovieBody struct {
 	Title       string `json:"title" validate:"required"`
 	Director    string `json:"director" validate:"required"`
 	ReleaseDate string `json:"releaseDate" validate:"required,datetime=2006-01-02"`
+	Picture     string `json:"picture" validate:"omitempty"`
 
 	CreatorId string   `json:"creatorId" validate:"required,isadminuuid"`
 	Actors    []string `json:"actors" validate:"required,unique,validactorslice"`
@@ -41,6 +43,7 @@ type MovieEditBody struct {
 	Title       string `json:"title" validate:"omitempty"`
 	Director    string `json:"director" validate:"omitempty"`
 	ReleaseDate string `json:"releaseDate" validate:"omitempty,datetime=2006-01-02"`
+	Picture     string `json:"picture" validate:"omitempty"`
 }
 
 type MovieActorsBody struct {
@@ -53,6 +56,7 @@ type MovieResponse struct {
 	Director     string       `json:"director"`
 	ReleaseDate  string       `json:"releaseDate"`
 	AverageGrade float64      `json:"averageGrade"`
+	Picture      string       `json:"picture"`
 	CreatedAt    time.Time    `json:"createdAt"`
 	UpdatedAt    time.Time    `json:"updatedAt"`
 	DeletedAt    sql.NullTime `json:"deletedAt"`
@@ -66,6 +70,7 @@ type MovieResponseWithActors struct {
 	Director     string       `json:"director"`
 	ReleaseDate  string       `json:"releaseDate"`
 	AverageGrade float64      `json:"averageGrade"`
+	Picture      string       `json:"picture"`
 	CreatedAt    time.Time    `json:"createdAt"`
 	UpdatedAt    time.Time    `json:"updatedAt"`
 	DeletedAt    sql.NullTime `json:"deletedAt"`
@@ -79,7 +84,7 @@ var actorModel ActorModel
 // Internal methods
 func (m *MovieModel) getActorsOfAMovie(db *sql.DB, movieID uuid.UUID) ([]ActorResponse, error) {
 	query := `SELECT 
-        a.id, a.name, a.surname, a.birthday, a.created_at, a.updated_at, a.deleted_at, a.creator_id
+        a.id, a.name, a.surname, a.birthday, a.picture, a.created_at, a.updated_at, a.deleted_at, a.creator_id
         FROM actors a
         	JOIN movies_actors ma ON a.id = ma.actor_id
         		WHERE ma.movie_id = $1 AND a.deleted_at IS NULL;`
@@ -93,7 +98,7 @@ func (m *MovieModel) getActorsOfAMovie(db *sql.DB, movieID uuid.UUID) ([]ActorRe
 	var actors []ActorResponse
 	for rows.Next() {
 		var actor ActorResponse
-		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
+		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.Picture, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
 			return nil, err
 		}
 		actors = append(actors, actor)
@@ -115,12 +120,12 @@ func (m *MovieModel) InsertMovieInDB(db *sql.DB, movieInfo MovieBody) (MovieResp
 	defer tx.Rollback() // This will execute if any error is returned and cancel any changes to the db
 
 	query := `INSERT INTO movies
-			(title, director, release_date, creator_id)
-			VALUES ($1, $2, $3, $4)
-				RETURNING id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id;`
+			(title, director, release_date, picture, creator_id)
+			VALUES ($1, $2, $3, $4, $5)
+				RETURNING id, title, director, release_date, average_grade, picture, created_at, updated_at, deleted_at, creator_id;`
 
 	var movie MovieResponseWithActors
-	err = tx.QueryRow(query, movieInfo.Title, movieInfo.Director, movieInfo.ReleaseDate, movieInfo.CreatorId).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
+	err = tx.QueryRow(query, movieInfo.Title, movieInfo.Director, movieInfo.ReleaseDate, movieInfo.Picture, movieInfo.CreatorId).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.Picture, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
 	if err != nil {
 		log.Printf("Error inserting movie into database: %v\n", err)
 		return MovieResponseWithActors{}, err
@@ -206,7 +211,7 @@ func (m *MovieModel) GetAllMovies(db *sql.DB, offset, limit int, orderBy string,
 
 	var getMoviesQueryBuilder strings.Builder
 	getMoviesQueryBuilder.WriteString(`SELECT
-	id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id 
+	id, title, director, release_date, average_grade, picture, created_at, updated_at, deleted_at, creator_id 
 	FROM movies`)
 
 	if !deleted {
@@ -226,7 +231,7 @@ func (m *MovieModel) GetAllMovies(db *sql.DB, offset, limit int, orderBy string,
 	var movies []MovieResponse
 	for rows.Next() {
 		var movie MovieResponse
-		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId); err != nil {
+		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.Picture, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId); err != nil {
 			return nil, err
 		}
 		movies = append(movies, movie)
@@ -240,7 +245,7 @@ func (m *MovieModel) GetAllMoviesWithActors(db *sql.DB, offset, limit int, order
 
 	var getMoviesQueryBuilder strings.Builder
 	getMoviesQueryBuilder.WriteString(`SELECT
-	id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id 
+	id, title, director, release_date, average_grade, picture, created_at, updated_at, deleted_at, creator_id 
 	FROM movies`)
 
 	if !deleted {
@@ -260,7 +265,7 @@ func (m *MovieModel) GetAllMoviesWithActors(db *sql.DB, offset, limit int, order
 	var movies []MovieResponseWithActors
 	for rows.Next() {
 		var movie MovieResponseWithActors
-		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId); err != nil {
+		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.Picture, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId); err != nil {
 			return nil, err
 		}
 
@@ -281,12 +286,12 @@ func (m *MovieModel) GetMovieByTitle(db *sql.DB, title string) (MovieModel, erro
 	log.Printf("Getting movie with title %s in DB... \n", title)
 
 	query := `SELECT 
-		id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id 
+		id, title, director, release_date, average_grade, picture, created_at, updated_at, deleted_at, creator_id 
 		FROM movies 
 			WHERE title = $1;`
 
 	var movie MovieModel
-	err := db.QueryRow(query, title).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
+	err := db.QueryRow(query, title).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.Picture, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
 	if err != nil {
 		log.Printf("Error getting movie by title: %v\n", err)
 		return MovieModel{}, err
@@ -299,12 +304,12 @@ func (m *MovieModel) GetMovieByIdWithActors(db *sql.DB, uuid uuid.UUID) (MovieRe
 	log.Printf("Getting movie with id %s in DB... \n", uuid)
 
 	query := `SELECT 
-		id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id 
+		id, title, director, release_date, average_grade, picture, created_at, updated_at, deleted_at, creator_id 
 		FROM movies 
 			WHERE id = $1;`
 
 	var movie MovieResponseWithActors
-	err := db.QueryRow(query, uuid).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
+	err := db.QueryRow(query, uuid).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.Picture, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
 	if err != nil {
 		log.Printf("Error getting movie by id: %v\n", err)
 		return MovieResponseWithActors{}, err
@@ -363,13 +368,19 @@ func (m *MovieModel) UpdateMovieById(db *sql.DB, uuid uuid.UUID, body MovieEditB
 		argIndex++
 	}
 
+	if body.Picture != "" {
+		updateQueryBuilder.WriteString("picture = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Picture)
+		argIndex++
+	}
+
 	updateQueryBuilder.WriteString("updated_at = CURRENT_TIMESTAMP, ")
 	query := strings.TrimSuffix(updateQueryBuilder.String(), ", ")
-	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, title, director, release_date, average_grade, created_at, updated_at, deleted_at, creator_id;"
+	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, title, director, release_date, average_grade, picture, created_at, updated_at, deleted_at, creator_id;"
 	args = append(args, uuid)
 
 	var movie MovieResponse
-	if err := db.QueryRow(query, args...).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId); err != nil {
+	if err := db.QueryRow(query, args...).Scan(&movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.Picture, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId); err != nil {
 		log.Printf("Error updating movie by uuid: %v \n", err)
 		return MovieResponse{}, nil
 	}

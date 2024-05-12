@@ -19,6 +19,7 @@ type UserModel struct {
 	Password  string       `json:"password" validate:"required,password"`
 	Birthday  string       `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
 	IsAdm     bool         `json:"isAdm"`
+	Picture   string       `json:"picture"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
@@ -30,6 +31,7 @@ type UserBody struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,password"`
 	Birthday string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
+	Picture  string `json:"picture" validate:"omitempty"`
 }
 
 type UserEditBody struct {
@@ -37,6 +39,7 @@ type UserEditBody struct {
 	Surname  string `json:"surname" validate:"omitempty"`
 	Password string `json:"password" validate:"omitempty,password"`
 	Birthday string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
+	Picture  string `json:"picture" validate:"omitempty"`
 }
 
 type UserResponse struct {
@@ -46,6 +49,7 @@ type UserResponse struct {
 	Email     string       `json:"email"`
 	Birthday  string       `json:"birthday"`
 	IsAdm     bool         `json:"isAdm"`
+	Picture   string       `json:"picture"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
@@ -55,12 +59,12 @@ func (u *UserModel) InsertUserInDB(db *sql.DB, userInfo UserBody) (UserResponse,
 	log.Printf("Inserting user with email %s in DB...\n", userInfo.Email)
 
 	query := `INSERT INTO users
-			(name, surname, email, password, birthday)
-            VALUES ($1, $2, $3, $4, $5) 
-			  	RETURNING id, name, surname, email, birthday, created_at, updated_at;`
+			(name, surname, email, password, birthday, picture)
+            VALUES ($1, $2, $3, $4, $5, $6) 
+			  	RETURNING id, name, surname, email, birthday, picture, created_at, updated_at, deleted_at;`
 
 	var user UserResponse
-	err := db.QueryRow(query, userInfo.Name, userInfo.Surname, userInfo.Email, userInfo.Password, userInfo.Birthday).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.CreatedAt, &user.UpdatedAt)
+	err := db.QueryRow(query, userInfo.Name, userInfo.Surname, userInfo.Email, userInfo.Password, userInfo.Birthday, userInfo.Picture).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.Picture, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt)
 	if err != nil {
 		log.Printf("Error inserting user into database: %v\n", err)
 		return UserResponse{}, err
@@ -73,12 +77,12 @@ func (u *UserModel) GetUserByEmail(db *sql.DB, email string) (UserModel, error) 
 	log.Printf("Getting user with email %s in DB... \n", email)
 
 	query := `SELECT 
-		id, name, surname, email, password, is_adm, created_at, updated_at, deleted_at 
+		id, name, surname, email, password, birthday, is_adm, picture, created_at, updated_at, deleted_at 
 		FROM users 
 			WHERE email = $1;`
 
 	var user UserModel
-	err := db.QueryRow(query, email).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Password, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt)
+	err := db.QueryRow(query, email).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Password, &user.Birthday, &user.IsAdm, &user.Picture, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt)
 	if err != nil {
 		log.Printf("Error getting user by email: %v\n", err)
 		return UserModel{}, err
@@ -92,7 +96,7 @@ func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string, d
 
 	var getUsersQueryBuilder strings.Builder
 	getUsersQueryBuilder.WriteString(`SELECT 
-		id, name, surname, email, birthday, is_adm, created_at, updated_at, deleted_at 
+		id, name, surname, email, birthday, is_adm, picture, created_at, updated_at, deleted_at 
 		FROM users`)
 
 	if !deleted {
@@ -112,7 +116,7 @@ func (u *UserModel) GetAllUsers(db *sql.DB, offset, limit int, orderBy string, d
 	var users []UserResponse
 	for rows.Next() {
 		var user UserResponse
-		if err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt); err != nil {
+		if err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.IsAdm, &user.Picture, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, user)
@@ -125,12 +129,12 @@ func (u *UserModel) GetUserById(db *sql.DB, uuid uuid.UUID) (UserResponse, error
 	log.Printf("Getting user with uuid %s in DB... \n", uuid)
 
 	query := `SELECT 
-		id, name, surname, email, birthday, is_adm, created_at, updated_at 
+		id, name, surname, email, birthday, is_adm, picture, created_at, updated_at 
 		FROM users 
 			WHERE id = $1;`
 
 	var user UserResponse
-	err := db.QueryRow(query, uuid).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt)
+	err := db.QueryRow(query, uuid).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.IsAdm, &user.Picture, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		log.Printf("Error getting user by uuid: %v\n", err)
 		return UserResponse{}, err
@@ -195,14 +199,20 @@ func (u *UserModel) UpdateUserById(db *sql.DB, uuid uuid.UUID, body UserEditBody
 		argIndex++
 	}
 
+	if body.Picture != "" {
+		updateQueryBuilder.WriteString("picture = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Picture)
+		argIndex++
+	}
+
 	updateQueryBuilder.WriteString("updated_at = CURRENT_TIMESTAMP, ")
 
 	query := strings.TrimSuffix(updateQueryBuilder.String(), ", ")
-	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, name, surname, email, birthday, is_adm, created_at, updated_at;"
+	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, name, surname, email, birthday, is_adm, picture, created_at, updated_at;"
 	args = append(args, uuid)
 
 	var user UserResponse
-	err := db.QueryRow(query, args...).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.IsAdm, &user.CreatedAt, &user.UpdatedAt)
+	err := db.QueryRow(query, args...).Scan(&user.ID, &user.Name, &user.Surname, &user.Email, &user.Birthday, &user.IsAdm, &user.Picture, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		log.Printf("Error updating user by uuid: %v\n", err)
 		return UserResponse{}, err

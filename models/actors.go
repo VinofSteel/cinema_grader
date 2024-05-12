@@ -15,6 +15,7 @@ type ActorModel struct {
 	Name      string       `json:"name"`
 	Surname   string       `json:"surname"`
 	Birthday  string       `json:"birthday"`
+	Picture   string       `json:"picture"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
@@ -26,6 +27,8 @@ type ActorBody struct {
 	Name      string `json:"name" validate:"required"`
 	Surname   string `json:"surname" validate:"required"`
 	Birthday  string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
+	Picture     string `json:"picture" validate:"omitempty"`
+	
 	CreatorId string `json:"creatorId" validate:"required,isadminuuid"`
 }
 
@@ -33,6 +36,7 @@ type ActorEditBody struct {
 	Name     string `json:"name" validate:"omitempty"`
 	Surname  string `json:"surname" validate:"omitempty"`
 	Birthday string `json:"birthday" validate:"omitempty,datetime=2006-01-02"`
+	Picture     string `json:"picture" validate:"omitempty"`
 }
 
 type ActorResponse struct {
@@ -40,6 +44,7 @@ type ActorResponse struct {
 	Name      string       `json:"name"`
 	Surname   string       `json:"surname"`
 	Birthday  string       `json:"birthday"`
+	Picture   string       `json:"picture"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
@@ -52,6 +57,7 @@ type ActorResponseWithMovies struct {
 	Name      string       `json:"name"`
 	Surname   string       `json:"surname"`
 	Birthday  string       `json:"birthday"`
+	Picture   string       `json:"picture"`
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	DeletedAt sql.NullTime `json:"deletedAt"`
@@ -64,13 +70,13 @@ func (a *ActorModel) InsertActorInDB(db *sql.DB, actorInfo ActorBody) (ActorResp
 	log.Printf("Inserting actor with name %s in DB by user %s...\n", actorInfo.Name, actorInfo.CreatorId)
 
 	query := `INSERT INTO actors
-			(name, surname, birthday, creator_id)
-			VALUES ($1, $2, $3, $4)
-				RETURNING id, name, surname, birthday, created_at, updated_at, deleted_at, creator_id;`
+			(name, surname, birthday, picture, creator_id)
+			VALUES ($1, $2, $3, $4, $5)
+				RETURNING id, name, surname, birthday, picture, created_at, updated_at, deleted_at, creator_id;`
 
 	var actor ActorResponse
 
-	if err := db.QueryRow(query, actorInfo.Name, actorInfo.Surname, actorInfo.Birthday, actorInfo.CreatorId).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
+	if err := db.QueryRow(query, actorInfo.Name, actorInfo.Surname, actorInfo.Birthday, actorInfo.Picture, actorInfo.CreatorId).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.Picture, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
 		log.Printf("Error inserting actor into database: %v\n", err)
 		return ActorResponse{}, err
 	}
@@ -83,7 +89,7 @@ func (a *ActorModel) GetAllActors(db *sql.DB, offset, limit int, orderBy string,
 
 	var getActorsQueryBuilder strings.Builder
 	getActorsQueryBuilder.WriteString(`SELECT 
-	id, name, surname, birthday, created_at, updated_at, deleted_at, creator_id 
+	id, name, surname, birthday, picture, created_at, updated_at, deleted_at, creator_id 
 	FROM actors`)
 
 	if !deleted {
@@ -103,7 +109,7 @@ func (a *ActorModel) GetAllActors(db *sql.DB, offset, limit int, orderBy string,
 	var actors []ActorResponse
 	for rows.Next() {
 		var actor ActorResponse
-		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
+		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.Picture, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
 			return nil, err
 		}
 		actors = append(actors, actor)
@@ -116,12 +122,12 @@ func (a *ActorModel) GetActorById(db *sql.DB, uuid uuid.UUID) (ActorResponse, er
 	log.Printf("Getting actor with uuid %s in DB... \n", uuid)
 
 	query := `SELECT 
-		id, name, surname, birthday, created_at, updated_at, deleted_at, creator_id
+		id, name, surname, birthday, picture, created_at, updated_at, deleted_at, creator_id
         FROM actors
         	WHERE id = $1;`
 
 	var actor ActorResponse
-	err := db.QueryRow(query, uuid).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId)
+	err := db.QueryRow(query, uuid).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.Picture, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId)
 	if err != nil {
 		log.Printf("Error getting actor by id in the database: %v\n", err)
 		return ActorResponse{}, err
@@ -141,11 +147,12 @@ func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorRe
 	}
 
 	query := `SELECT 
-		a.id, a.name, a.surname, a.birthday, 
+		a.id, a.name, a.surname, a.birthday, a.picture,
 		a.created_at, a.updated_at, a.deleted_at, 
 		a.creator_id, 
-		m.id, m.title, m.director,
-		m.release_date, m.average_grade, m.created_at, m.updated_at, m.deleted_at,
+		m.id, m.title, m.director, m.release_date, 
+		m.average_grade, m.picture,
+		m.created_at, m.updated_at, m.deleted_at,
 		m.creator_id 
 			FROM actors a
 				LEFT JOIN movies_actors ma ON a.id = ma.actor_id
@@ -163,7 +170,7 @@ func (a *ActorModel) GetActorByIdWithMovies(db *sql.DB, uuid uuid.UUID) (ActorRe
 	movies := make([]MovieResponse, 0)
 	for rows.Next() {
 		var movie MovieResponse
-		err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId, &movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
+		err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.Picture, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId, &movie.ID, &movie.Title, &movie.Director, &movie.ReleaseDate, &movie.AverageGrade, &movie.Picture, &movie.CreatedAt, &movie.UpdatedAt, &movie.DeletedAt, &movie.CreatorId)
 		if err != nil {
 			log.Printf("Error scanning movie row in GetActorByIdWithMovies: %v\n", err)
 			continue
@@ -254,13 +261,19 @@ func (a *ActorModel) UpdateActorById(db *sql.DB, uuid uuid.UUID, body ActorEditB
 		argIndex++
 	}
 
+	if body.Picture != "" {
+		updateQueryBuilder.WriteString("picture = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Picture)
+		argIndex++
+	}
+
 	updateQueryBuilder.WriteString("updated_at = CURRENT_TIMESTAMP, ")
 	query := strings.TrimSuffix(updateQueryBuilder.String(), ", ")
-	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, name, surname, birthday, created_at, updated_at, deleted_at, creator_id;"
+	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, name, surname, birthday, picture, created_at, updated_at, deleted_at, creator_id;"
 	args = append(args, uuid)
 
 	var actor ActorResponse
-	if err := db.QueryRow(query, args...).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
+	if err := db.QueryRow(query, args...).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.Picture, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
 		log.Printf("Error updating actor by uuid: %v \n", err)
 		return ActorResponse{}, err
 	}
