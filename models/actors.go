@@ -217,7 +217,7 @@ func (a *ActorModel) DeleteActorById(db *sql.DB, uuid uuid.UUID) error {
 	// Deleting actor per se
 	query := `UPDATE actors 
 		SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
-		WHERE id = $1 AND deleted_at ISNULL;`
+		WHERE id = $1 AND deleted_at IS NULL;`
 
 	_, err = tx.Exec(query, uuid)
 	if err != nil {

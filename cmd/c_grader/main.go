@@ -104,6 +104,7 @@ func main() {
 	app.Post("/comments/:uuid", middleware.VerifyUserOrAdmin, commentController.CreateComment)
 	app.Get("/comments", middleware.VerifyAdmin, commentController.ListAllCommentsInDb)
 	app.Get("/comments/:uuid", commentController.GetComment)
+	app.Delete("/comments/:uuid", middleware.VerifyUserOrAdmin, commentController.DeleteComment)
 
 	// @TODO: All comments made by a user
 	// @TODO: All comments in a movie

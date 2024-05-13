@@ -181,3 +181,45 @@ func (com *Comment) GetComment(c *fiber.Ctx) error {
 	c.Status(fiber.StatusOK).JSON(commentResponse)
 	return nil
 }
+
+func (com *Comment) DeleteComment(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	_, err = CommentModel.GetCommentById(com.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Comment id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "Comment id not found in database",
+			}
+		}
+
+		log.Println("Error getting comment by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	if err := CommentModel.DeleteCommentById(com.DB, uuid); err != nil {
+		log.Println("Error deleting comment in DB:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Couldn't delete comment in DB",
+		}
+	}
+
+	c.Status(fiber.StatusNoContent)
+	return nil
+}

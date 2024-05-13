@@ -148,7 +148,7 @@ func (u *UserModel) DeleteUserById(db *sql.DB, uuid uuid.UUID) error {
 
 	query := `UPDATE users 
 		SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
-		WHERE id = $1 AND deleted_at ISNULL;`
+		WHERE id = $1 AND deleted_at IS NULL;`
 
 	_, err := db.Exec(query, uuid)
 	if err != nil {

@@ -114,3 +114,19 @@ func (c *CommentModel) GetCommentById(db *sql.DB, uuid uuid.UUID) (CommentRespon
 
 	return comment, nil
 }
+
+func (c *CommentModel) DeleteCommentById(db *sql.DB, uuid uuid.UUID) error {
+	log.Printf("Deleting comment with uuid %s in DB... \n", uuid)
+
+	query := `UPDATE comments 
+		SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
+		WHERE id = $1 AND deleted_at IS NULL;`
+
+	_, err := db.Exec(query, uuid)
+	if err != nil {
+		log.Printf("Error deleting comment by uuid: %v\n", err)
+		return err
+	}
+
+	return nil
+}
