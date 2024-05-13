@@ -3,6 +3,8 @@ package controllers
 import (
 	"database/sql"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/VinOfSteel/cinemagrader/models"
 	"github.com/VinOfSteel/cinemagrader/validation"
@@ -81,5 +83,67 @@ func (com *Comment) CreateComment(c *fiber.Ctx) error {
 	}
 
 	c.Status(fiber.StatusCreated).JSON(commentResponse)
+	return nil
+}
+
+func (com *Comment) ListAllCommentsInDb(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+
+	// Query params
+	offset := c.Query("offset", "0")
+	limit := c.Query("limit", "10")
+	orderBy := c.Query("sort", "created,desc")
+	deletedQuery := c.Query("deleted", "false")
+
+	offsetInt, err := strconv.Atoi(offset)
+	if err != nil {
+		log.Println("Invalid offset value:", offset)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Offset needs to be a valid integer",
+		}
+	}
+
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		log.Println("Invalid limit value:", limit)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Limit needs to be a valid integer",
+		}
+	}
+
+	switch strings.ToLower(orderBy) {
+	case "created,asc":
+		orderBy = "created_at ASC"
+	case "created,desc":
+		orderBy = "created_at DESC"
+	case "grade,asc":
+		orderBy = "grade ASC"
+	case "grade,desc":
+		orderBy = "grade DESC"
+	case "updated,asc":
+		orderBy = "updated_at ASC"
+	default:
+		orderBy = "updated_at DESC"
+	}
+
+	var deleted bool
+	if deletedQuery == "true" {
+		deleted = true
+	}
+
+	commentsList, err := CommentModel.GetAllComments(com.DB, offsetInt, limitInt, orderBy, deleted)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			log.Println("Error getting all comments:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusInternalServerError,
+				Message: "Unknown error",
+			}
+		}
+	}
+
+	c.Status(fiber.StatusOK).JSON(commentsList)
 	return nil
 }

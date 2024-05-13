@@ -110,6 +110,7 @@ func (a *ActorModel) GetAllActors(db *sql.DB, offset, limit int, orderBy string,
 	for rows.Next() {
 		var actor ActorResponse
 		if err := rows.Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.Picture, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
+			log.Println("Error scanning actor from db:", err)
 			return nil, err
 		}
 		actors = append(actors, actor)

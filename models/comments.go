@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -60,4 +61,39 @@ func (c *CommentModel) InsertCommentInDB(db *sql.DB, uuid uuid.UUID, commentInfo
 	}
 
 	return comment, nil
+}
+
+func (c *CommentModel) GetAllComments(db *sql.DB, offset, limit int, orderBy string, deleted bool) ([]CommentResponse, error) {
+	log.Printf("Getting all comments in DB, with offset %v, limit %v, orderBy %v and deleted %v...\n", offset, limit, orderBy, deleted)
+
+	var getCommentsQueryBuilder strings.Builder
+	getCommentsQueryBuilder.WriteString(`SELECT 
+	id, comment, grade, created_at, updated_at, deleted_at, user_id, movie_id 
+	FROM comments`)
+
+	if !deleted {
+		getCommentsQueryBuilder.WriteString(" WHERE deleted_at IS NULL")
+	}
+
+	getCommentsQueryBuilder.WriteString(" ORDER BY " + orderBy + " OFFSET $1 LIMIT $2;")
+
+	query := getCommentsQueryBuilder.String()
+	rows, err := db.Query(query, offset, limit)
+	if err != nil {
+		log.Println("Error getting all comments from db:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments []CommentResponse
+	for rows.Next() {
+		var comment CommentResponse
+		if err := rows.Scan(&comment.ID, &comment.Comment, &comment.Grade, &comment.CreatedAt, &comment.UpdatedAt, &comment.DeletedAt, &comment.UserId, &comment.MovieId); err != nil {
+			log.Println("Error scanning comment from db:", err)
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+
+	return comments, nil
 }

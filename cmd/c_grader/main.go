@@ -102,6 +102,10 @@ func main() {
 
 	// Routes - Comments
 	app.Post("/comments/:uuid", middleware.VerifyUserOrAdmin, commentController.CreateComment)
+	app.Get("/comments", commentController.ListAllCommentsInDb)
+
+	// @TODO: All comments made by a user
+	// @TODO: All comments in a movie
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }
