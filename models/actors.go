@@ -128,8 +128,7 @@ func (a *ActorModel) GetActorById(db *sql.DB, uuid uuid.UUID) (ActorResponse, er
         	WHERE id = $1;`
 
 	var actor ActorResponse
-	err := db.QueryRow(query, uuid).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.Picture, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId)
-	if err != nil {
+	if err := db.QueryRow(query, uuid).Scan(&actor.ID, &actor.Name, &actor.Surname, &actor.Birthday, &actor.Picture, &actor.CreatedAt, &actor.UpdatedAt, &actor.DeletedAt, &actor.CreatorId); err != nil {
 		log.Printf("Error getting actor by id in the database: %v\n", err)
 		return ActorResponse{}, err
 	}

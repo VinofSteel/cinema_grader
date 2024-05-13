@@ -97,3 +97,20 @@ func (c *CommentModel) GetAllComments(db *sql.DB, offset, limit int, orderBy str
 
 	return comments, nil
 }
+
+func (c *CommentModel) GetCommentById(db *sql.DB, uuid uuid.UUID) (CommentResponse, error) {
+	log.Printf("Getting comment with uuid %s in DB... \n", uuid)
+
+	query := `SELECT 
+		id, comment, grade, created_at, updated_at, deleted_at, user_id, movie_id 
+        FROM comments
+        	WHERE id = $1;`
+
+	var comment CommentResponse
+	if err := db.QueryRow(query, uuid).Scan(&comment.ID, &comment.Comment, &comment.Grade, &comment.CreatedAt, &comment.UpdatedAt, &comment.DeletedAt, &comment.UserId, &comment.MovieId); err != nil {
+		log.Printf("Error getting comment by id in the database: %v\n", err)
+		return CommentResponse{}, err
+	}
+
+	return comment, nil
+}

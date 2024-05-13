@@ -103,6 +103,7 @@ func main() {
 	// Routes - Comments
 	app.Post("/comments/:uuid", middleware.VerifyUserOrAdmin, commentController.CreateComment)
 	app.Get("/comments", middleware.VerifyAdmin, commentController.ListAllCommentsInDb)
+	app.Get("/comments/:uuid", commentController.GetComment)
 
 	// @TODO: All comments made by a user
 	// @TODO: All comments in a movie
