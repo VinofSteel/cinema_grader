@@ -120,6 +120,37 @@ func Test_CommentsRoutes(t *testing.T) {
 			responseType: "slice",
 			testType:     "global-error",
 		}, // Since sort casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
+		{
+			description:      "GET BY ID - Passing an uuid that exists in DB - Success Case",
+			route:            fmt.Sprintf("/comments/%v", commentResponses[1].ID),
+			method:           "GET",
+			expectedCode:     200,
+			expectedResponse: commentResponses[1],
+			responseType:     "struct",
+			testType:         "success",
+		},
+		{
+			description:  "GET BY ID - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/comments/%v", uuid.New()),
+			method:       "GET",
+			expectedCode: 404,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Comment id not found in database",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
+		{
+			description:  "GET BY ID - Passing an invalid uuid - Error Case",
+			route:        "/comments/testestetsts",
+			method:       "GET",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
 	}
 
 	for _, testCase := range testCases {

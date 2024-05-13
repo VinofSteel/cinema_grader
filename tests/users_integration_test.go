@@ -250,6 +250,7 @@ func TestMain(m *testing.M) {
 	// Routes - Comments
 	App.Post("/comments/:uuid", commentController.CreateComment)
 	App.Get("/comments", commentController.ListAllCommentsInDb)
+	App.Get("/comments/:uuid", commentController.GetComment)
 
 	// Run tests
 	exitCode := m.Run()
