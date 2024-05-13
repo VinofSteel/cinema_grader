@@ -20,6 +20,7 @@ var TestDb string
 var UserModel models.UserModel
 var ActorModel models.ActorModel
 var MovieModel models.MovieModel
+var CommentModel models.CommentModel
 
 type GlobalErrorHandlerResp struct {
 	Message string `json:"message"`
@@ -236,4 +237,36 @@ func InsertMockedMoviesInDB(db *sql.DB, movies []models.MovieBody) []models.Movi
 	}
 
 	return responses
+}
+
+func InsertMockedCommentsInDB(db *sql.DB, comments []models.CommentBody, userId string) []models.CommentResponse {
+	var wg sync.WaitGroup
+	var respChan = make(chan models.CommentResponse, len(comments))
+	parsedId, err := uuid.Parse(userId)
+	if err != nil {
+		log.Fatalf("Error parsing userId %v to uuid in InsertMockedCommentsInDB: %v", userId, err)
+	}
+
+	for _, comment := range comments {
+		wg.Add(1)
+		go func(c models.CommentBody, id uuid.UUID) {
+			defer wg.Done()
+
+			commentResponse, err := CommentModel.InsertCommentInDB(db, parsedId, c)
+			if err != nil {
+				log.Fatalf("Error inserting mocked comment with in Db: %v", err)
+			}
+			respChan <- commentResponse
+		}(comment, parsedId)
+	}
+
+	wg.Wait()
+	close(respChan)
+
+	var output []models.CommentResponse
+	for comment := range respChan {
+		output = append(output, comment)
+	}
+
+	return output
 }

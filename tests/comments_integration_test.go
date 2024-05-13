@@ -69,6 +69,57 @@ func Test_CommentsRoutes(t *testing.T) {
 			responseType: "struct",
 			testType:     "global-error",
 		},
+		// Get requests
+		{
+			description:  "GET - All comments with basic query params - Success Case", // We don't do gigantic offsets and limits to not need to mock 10 things
+			route:        "/comments?offset=1&limit=3&sort=grade,asc",
+			method:       "GET",
+			expectedCode: 200,
+			expectedResponse: []models.CommentResponse{
+				{
+					Comment: "Comment 4",
+					Grade:   2,
+					MovieId: movieResponses[0].ID.String(),
+					UserId:  adminId,
+				},
+				{
+					Comment: "Comment 3",
+					Grade:   3,
+					MovieId: movieResponses[0].ID.String(),
+					UserId:  adminId,
+				},
+				{
+					Comment: "Comment 2", // Since we have the comment created in the POST request, commenting the other tests will net this one a failure. Too bad!
+					Grade:   4,
+					MovieId: movieResponses[0].ID.String(),
+					UserId:  adminId,
+				},
+			},
+			responseType: "slice",
+			testType:     "success",
+		},
+		{
+			description:  "GET - Passing an offset that is not a number - Error Case",
+			route:        "/comments?offset=2.254",
+			method:       "GET",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Offset needs to be a valid integer",
+			},
+			responseType: "slice",
+			testType:     "global-error",
+		},
+		{
+			description:  "GET - Passing a limit that is not a number - Error Case",
+			route:        "/comments?limit=aushaushaush",
+			method:       "GET",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Limit needs to be a valid integer",
+			},
+			responseType: "slice",
+			testType:     "global-error",
+		}, // Since sort casts every non-valid value to a default valid one, it does not need to be tested, as any error case will fall into the updated_at DESC clause.
 	}
 
 	for _, testCase := range testCases {
@@ -136,16 +187,16 @@ func Test_CommentsRoutes(t *testing.T) {
 						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
 						assert.NotEqual(t, time.Time{}, actResp.UpdatedAt, "UpdatedAt should not be nil")
 
-						// for _, actor := range actorResponses {
-						// 	if actor.Name == actResp.Name && actor.Surname == actResp.Surname {
-						// 		assert.Equal(t, actor.ID, actResp.ID, "ID mismatch")
-						// 		assert.Equal(t, actor.CreatedAt.UTC(), actResp.CreatedAt, "CreatedAt mismatch")
-						// 		assert.Equal(t, actor.UpdatedAt.UTC(), actResp.UpdatedAt, "UpdatedAt mismatch")
-						// 		assert.Equal(t, actor.DeletedAt.Valid, false, "DeletedAt should not be a valid date")
-						// 		assert.Equal(t, actor.DeletedAt.Time, time.Time{}, "DeletedAt should be a 0 value")
-						// 		break
-						// 	}
-						// }
+						for _, comment := range commentResponses {
+							if comment.Comment == actResp.Comment {
+								assert.Equal(t, comment.ID, actResp.ID, "ID mismatch")
+								assert.Equal(t, comment.CreatedAt.UTC(), actResp.CreatedAt, "CreatedAt mismatch")
+								assert.Equal(t, comment.UpdatedAt.UTC(), actResp.UpdatedAt, "UpdatedAt mismatch")
+								assert.Equal(t, comment.DeletedAt.Valid, false, "DeletedAt should not be a valid date")
+								assert.Equal(t, comment.DeletedAt.Time, time.Time{}, "DeletedAt should be a 0 value")
+								break
+							}
+						}
 					}
 				}
 
@@ -164,16 +215,16 @@ func Test_CommentsRoutes(t *testing.T) {
 					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.UpdatedAt, "UpdatedAt should not be nil")
 
-					// for _, actor := range actorResponses {
-					// 	if actor.Name == actual.Name && actor.Surname == actual.Surname {
-					// 		assert.Equal(t, actor.ID, actual.ID, "ID mismatch")
-					// 		assert.Equal(t, actor.CreatedAt.UTC(), actual.CreatedAt, "CreatedAt mismatch")
-					// 		assert.Equal(t, actor.UpdatedAt.UTC(), actual.UpdatedAt, "UpdatedAt mismatch")
-					// 		assert.Equal(t, actor.DeletedAt.Valid, false, "DeletedAt should not be a valid date")
-					// 		assert.Equal(t, actor.DeletedAt.Time, time.Time{}, "DeletedAt should be a 0 value")
-					// 		break
-					// 	}
-					// }
+					for _, comment := range commentResponses {
+						if comment.Comment == actual.Comment {
+							assert.Equal(t, comment.ID, actual.ID, "ID mismatch")
+							assert.Equal(t, comment.CreatedAt.UTC(), actual.CreatedAt, "CreatedAt mismatch")
+							assert.Equal(t, comment.UpdatedAt.UTC(), actual.UpdatedAt, "UpdatedAt mismatch")
+							assert.Equal(t, comment.DeletedAt.Valid, false, "DeletedAt should not be a valid date")
+							assert.Equal(t, comment.DeletedAt.Time, time.Time{}, "DeletedAt should be a 0 value")
+							break
+						}
+					}
 				}
 
 				compareCommentResponses(t, testCase.expectedResponse.(models.CommentResponse), respStruct)

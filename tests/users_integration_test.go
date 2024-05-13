@@ -24,6 +24,7 @@ import (
 var userResponses []models.UserResponse
 var actorResponses []models.ActorResponse
 var movieResponses []models.MovieResponseWithActors
+var commentResponses []models.CommentResponse
 var adminId string
 
 func TestMain(m *testing.M) {
@@ -161,6 +162,35 @@ func TestMain(m *testing.M) {
 		},
 	}
 	movieResponses = InsertMockedMoviesInDB(db, moviesToBeInsertedInDB)
+
+	commentsToBeInsertedInDB := []models.CommentBody{
+		{
+			Comment: "Comment 1",
+			Grade:   5,
+			MovieId: movieResponses[0].ID.String(),
+		},
+		{
+			Comment: "Comment 2",
+			Grade:   4,
+			MovieId: movieResponses[0].ID.String(),
+		},
+		{
+			Comment: "Comment 3",
+			Grade:   3,
+			MovieId: movieResponses[0].ID.String(),
+		},
+		{
+			Comment: "Comment 4",
+			Grade:   2,
+			MovieId: movieResponses[0].ID.String(),
+		},
+		{
+			Comment: "Comment 5",
+			Grade:   1,
+			MovieId: movieResponses[0].ID.String(),
+		},
+	}
+	commentResponses = InsertMockedCommentsInDB(db, commentsToBeInsertedInDB, adminId)
 
 	App = fiber.New()
 
@@ -475,7 +505,7 @@ func Test_UsersRoutes(t *testing.T) {
 			}
 
 			if testCase.responseType == "slice" {
-				compareUserResponses := func(t *testing.T, expected, actual []models.UserResponse) {
+				compareuserResponses := func(t *testing.T, expected, actual []models.UserResponse) {
 					for i, actResp := range actual {
 						expected[i].ID = uuid.Nil
 
@@ -503,9 +533,9 @@ func Test_UsersRoutes(t *testing.T) {
 					}
 				}
 
-				compareUserResponses(t, testCase.expectedResponse.([]models.UserResponse), respSlice)
+				compareuserResponses(t, testCase.expectedResponse.([]models.UserResponse), respSlice)
 			} else {
-				compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
+				compareuserResponses := func(t *testing.T, expected, actual models.UserResponse) {
 					expected.ID = uuid.Nil
 
 					assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
@@ -531,7 +561,7 @@ func Test_UsersRoutes(t *testing.T) {
 					}
 				}
 
-				compareUserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
+				compareuserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
 			}
 		}
 
@@ -567,7 +597,7 @@ func Test_UsersRoutes(t *testing.T) {
 				}
 			}
 
-			compareUserResponses := func(t *testing.T, expected, actual models.UserResponse) {
+			compareuserResponses := func(t *testing.T, expected, actual models.UserResponse) {
 				expected.ID = uuid.Nil
 
 				assert.Equal(t, expected.Name, actual.Name, "Name should be updated")
@@ -578,7 +608,7 @@ func Test_UsersRoutes(t *testing.T) {
 				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
 			}
 
-			compareUserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
+			compareuserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
 		}
 	}
 }
