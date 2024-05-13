@@ -185,6 +185,16 @@ func Test_ActorRoutes(t *testing.T) {
 		},
 		{
 			description:  "DELETE BY ID - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/actors/%v", uuid.New()),
+			method:       "DELETE",
+			expectedCode: 404,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Actor id not found in database",
+			},
+			testType: "global-error",
+		},
+		{
+			description:  "DELETE BY ID - Passing an invalid uuid - Error Case",
 			route:        fmt.Sprintf("/actors/%v", "testeasdasd"),
 			method:       "DELETE",
 			expectedCode: 400,

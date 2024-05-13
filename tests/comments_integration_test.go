@@ -151,6 +151,35 @@ func Test_CommentsRoutes(t *testing.T) {
 			responseType: "struct",
 			testType:     "global-error",
 		},
+		// Delete requests
+		{
+			description:      "DELETE BY ID - Passing an uuid that exists in DB - Success Case",
+			route:            fmt.Sprintf("/comments/%v", commentResponses[2].ID),
+			method:           "DELETE",
+			expectedCode:     204,
+			expectedResponse: commentResponses[2],
+			testType:         "delete",
+		},
+		{
+			description:  "DELETE BY ID - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/comments/%v", uuid.New()),
+			method:       "DELETE",
+			expectedCode: 404,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Comment id not found in database",
+			},
+			testType: "global-error",
+		},
+		{
+			description:  "DELETE BY ID - Passing an invalid uuid - Error Case",
+			route:        fmt.Sprintf("/comments/%v", "testeasdasd"),
+			method:       "DELETE",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			testType: "global-error",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -264,6 +293,20 @@ func Test_CommentsRoutes(t *testing.T) {
 
 		if testCase.testType == "global-error" {
 			assert.Equal(t, testCase.expectedResponse.(GlobalErrorHandlerResp).Message, string(responseBody))
+		}
+
+		if testCase.testType == "delete" {
+			commentResp, err := CommentModel.GetCommentById(db, testCase.expectedResponse.(models.CommentResponse).ID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					assert.Fail(t, "Comment not found in database when getting by id", testCase.expectedResponse.(models.CommentResponse).ID)
+				}
+
+				assert.Fail(t, "Error when getting comment by id", err)
+			}
+
+			assert.Equal(t, commentResp.DeletedAt.Valid, true, "deletedAt date is not valid after executing delete request on actor")
+			assert.NotEqual(t, commentResp.DeletedAt.Time, time.Time{}, "deleteAt time should be the time of deletion, not a 0 value")
 		}
 	}
 }
