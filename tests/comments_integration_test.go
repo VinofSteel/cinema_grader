@@ -180,6 +180,44 @@ func Test_CommentsRoutes(t *testing.T) {
 			},
 			testType: "global-error",
 		},
+		// Update requests
+		{
+			description: "UPDATE - Update comment info (all keys) - Success Case",
+			route:       fmt.Sprintf("/comments/%v", commentResponses[3].ID),
+			method:      "PATCH",
+			data: map[string]interface{}{
+				"comment": "New comment",
+				"grade":   3.4,
+			},
+			expectedCode: 200,
+			expectedResponse: models.CommentResponse{
+				Comment: "New comment",
+				Grade:   3.4,
+			},
+			testType: "update",
+		},
+		{
+			description:  "UPDATE - Passing an uuid that does not exist in DB - Error Case",
+			route:        fmt.Sprintf("/comments/%v", uuid.New()),
+			method:       "PATCH",
+			expectedCode: 404,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Comment id not found in database",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
+		{
+			description:  "UPDATE - Passing an invalid uuid - Error Case",
+			route:        fmt.Sprintf("/comments/%v", "saudhaushdu"),
+			method:       "PATCH",
+			expectedCode: 400,
+			expectedResponse: GlobalErrorHandlerResp{
+				Message: "Invalid uuid parameter",
+			},
+			responseType: "struct",
+			testType:     "global-error",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -239,7 +277,7 @@ func Test_CommentsRoutes(t *testing.T) {
 
 						assert.Equal(t, expected[i].Comment, actResp.Comment, "Comment mismatch")
 						assert.Equal(t, expected[i].Grade, actResp.Grade, "Grade mismatch")
-						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should not be nil")
+						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should be nil")
 						assert.Equal(t, expected[i].UserId, actResp.UserId, "UserId mismatch")
 						assert.Equal(t, expected[i].MovieId, actResp.MovieId, "MovieId mismatch")
 
@@ -267,7 +305,7 @@ func Test_CommentsRoutes(t *testing.T) {
 
 					assert.Equal(t, expected.Comment, actual.Comment, "Comment mismatch")
 					assert.Equal(t, expected.Grade, actual.Grade, "Grade mismatch")
-					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
 					assert.Equal(t, expected.UserId, actual.UserId, "UserId mismatch")
 					assert.Equal(t, expected.MovieId, actual.MovieId, "MovieId mismatch")
 
@@ -307,6 +345,31 @@ func Test_CommentsRoutes(t *testing.T) {
 
 			assert.Equal(t, commentResp.DeletedAt.Valid, true, "deletedAt date is not valid after executing delete request on actor")
 			assert.NotEqual(t, commentResp.DeletedAt.Time, time.Time{}, "deleteAt time should be the time of deletion, not a 0 value")
+		}
+
+		if testCase.testType == "update" {
+			var respStruct models.CommentResponse
+			var respSlice []models.CommentResponse
+
+			if testCase.responseType == "slice" {
+				if err := json.Unmarshal(responseBody, &respSlice); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			} else {
+				if err := json.Unmarshal(responseBody, &respStruct); err != nil {
+					t.Fatalf("Error unmarshalling response body: %v", err)
+				}
+			}
+
+			compareCommentResponses := func(t *testing.T, expected, actual models.CommentResponse) {
+				expected.ID = uuid.Nil
+
+				assert.Equal(t, expected.Comment, actual.Comment, "Comment should be updated")
+				assert.Equal(t, expected.Grade, actual.Grade, "Grade should be updated")
+				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
+			}
+
+			compareCommentResponses(t, testCase.expectedResponse.(models.CommentResponse), respStruct)
 		}
 	}
 }

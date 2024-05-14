@@ -346,7 +346,7 @@ func Test_MoviesRoutes(t *testing.T) {
 						assert.Equal(t, expected[i].Title, actResp.Title, "Title mismatch")
 						assert.Equal(t, expected[i].Director, actResp.Director, "Director mismatch")
 						assert.Equal(t, expected[i].ReleaseDate, actResp.ReleaseDate, "ReleaseDate mismatch")
-						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should not be nil")
+						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should be nil")
 
 						assert.NotEqual(t, uuid.Nil, actResp.ID, "ID should not be nil")
 						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
@@ -381,7 +381,7 @@ func Test_MoviesRoutes(t *testing.T) {
 					assert.Equal(t, expected.Title, actual.Title, "Title mismatch")
 					assert.Equal(t, expected.Director, actual.Director, "Director mismatch")
 					assert.Equal(t, expected.ReleaseDate, actual.ReleaseDate, "ReleaseDate mismatch")
-					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
 
 					assert.NotEqual(t, uuid.Nil, actual.ID, "ID should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")

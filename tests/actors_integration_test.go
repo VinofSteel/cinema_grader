@@ -295,7 +295,7 @@ func Test_ActorRoutes(t *testing.T) {
 						assert.Equal(t, expected[i].Name, actResp.Name, "Name mismatch")
 						assert.Equal(t, expected[i].Surname, actResp.Surname, "Surname mismatch")
 						assert.Equal(t, expected[i].Birthday, actResp.Birthday, "Birthday mismatch")
-						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should not be nil")
+						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should be nil")
 						assert.Equal(t, expected[i].CreatorId, actResp.CreatorId, "CreatorId mismatch")
 
 						assert.NotEqual(t, uuid.Nil, actResp.ID, "ID should not be nil")
@@ -323,7 +323,7 @@ func Test_ActorRoutes(t *testing.T) {
 					assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
 					assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
 					assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
-					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
 					assert.Equal(t, expected.CreatorId, actual.CreatorId, "CreatorId mismatch")
 
 					assert.NotEqual(t, uuid.Nil, actual.ID, "ID should not be nil")
@@ -369,7 +369,7 @@ func Test_ActorRoutes(t *testing.T) {
 						assert.Equal(t, expected[i].Name, actResp.Name, "Name mismatch")
 						assert.Equal(t, expected[i].Surname, actResp.Surname, "Surname mismatch")
 						assert.Equal(t, expected[i].Birthday, actResp.Birthday, "Birthday mismatch")
-						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should not be nil")
+						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should be nil")
 						assert.Equal(t, expected[i].CreatorId, actResp.CreatorId, "CreatorId mismatch")
 
 						assert.NotEqual(t, uuid.Nil, actResp.ID, "ID should not be nil")
@@ -404,7 +404,7 @@ func Test_ActorRoutes(t *testing.T) {
 					assert.Equal(t, expected.Name, actual.Name, "Name mismatch")
 					assert.Equal(t, expected.Surname, actual.Surname, "Surname mismatch")
 					assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
-					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
 					assert.Equal(t, expected.CreatorId, actual.CreatorId, "CreatorId mismatch")
 
 					assert.NotEqual(t, uuid.Nil, actual.ID, "ID should not be nil")

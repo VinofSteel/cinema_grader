@@ -517,7 +517,7 @@ func Test_UsersRoutes(t *testing.T) {
 						assert.Equal(t, expected[i].Email, actResp.Email, "Email mismatch")
 						assert.Equal(t, expected[i].Birthday, actResp.Birthday, "Birthday mismatch")
 						assert.Equal(t, expected[i].IsAdm, actResp.IsAdm, "IsAdm mismatch")
-						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should not be nil")
+						assert.Equal(t, sql.NullTime{}, actResp.DeletedAt, "DeletedAt should be nil")
 
 						assert.NotEqual(t, uuid.Nil, actResp.ID, "ID should not be nil")
 						assert.NotEqual(t, time.Time{}, actResp.CreatedAt, "CreatedAt should not be nil")
@@ -546,7 +546,7 @@ func Test_UsersRoutes(t *testing.T) {
 					assert.Equal(t, expected.Email, actual.Email, "Email mismatch")
 					assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday mismatch")
 					assert.Equal(t, expected.IsAdm, actual.IsAdm, "Birthday mismatch")
-					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+					assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
 
 					assert.NotEqual(t, uuid.Nil, actual.ID, "ID should not be nil")
 					assert.NotEqual(t, time.Time{}, actual.CreatedAt, "CreatedAt should not be nil")
@@ -608,7 +608,7 @@ func Test_UsersRoutes(t *testing.T) {
 				assert.Equal(t, expected.Birthday, actual.Birthday, "Birthday should be updated")
 				assert.Equal(t, expected.Picture, actual.Picture, "Picture should be updated")
 				assert.Equal(t, expected.IsAdm, actual.IsAdm, "IsAdm should be updated")
-				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should not be nil")
+				assert.Equal(t, sql.NullTime{}, actual.DeletedAt, "DeletedAt should be nil")
 			}
 
 			compareuserResponses(t, testCase.expectedResponse.(models.UserResponse), respStruct)
