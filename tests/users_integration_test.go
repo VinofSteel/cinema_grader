@@ -252,6 +252,7 @@ func TestMain(m *testing.M) {
 	App.Get("/comments", commentController.ListAllCommentsInDb)
 	App.Get("/comments/:uuid", commentController.GetComment)
 	App.Delete("/comments/:uuid", commentController.DeleteComment)
+	App.Patch("/comments/:uuid", commentController.UpdateComment)
 
 	// Run tests
 	exitCode := m.Run()

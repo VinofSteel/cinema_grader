@@ -72,7 +72,7 @@ func (s *Session) HandleLogin(c *fiber.Ctx) error {
 		log.Println("Error parsing JSON body:", err)
 		return &fiber.Error{
 			Code:    fiber.StatusInternalServerError,
-			Message: "Unknown error while parsing JSON body, check your request",
+			Message: "Error while parsing JSON body, check your request",
 		}
 	}
 

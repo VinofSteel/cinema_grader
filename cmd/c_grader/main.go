@@ -105,6 +105,7 @@ func main() {
 	app.Get("/comments", middleware.VerifyAdmin, commentController.ListAllCommentsInDb)
 	app.Get("/comments/:uuid", commentController.GetComment)
 	app.Delete("/comments/:uuid", middleware.VerifyUserOrAdmin, commentController.DeleteComment)
+	app.Patch("/comments/:uuid", middleware.VerifyUserOrAdmin, commentController.UpdateComment)
 
 	// @TODO: All comments made by a user
 	// @TODO: All comments in a movie

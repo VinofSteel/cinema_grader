@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -129,4 +130,39 @@ func (c *CommentModel) DeleteCommentById(db *sql.DB, uuid uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (c *CommentModel) UpdateCommentsById(db *sql.DB, uuid uuid.UUID, body CommentEditBody) (CommentResponse, error) {
+	log.Printf("Updating comment with uuid %s in DB... \n", uuid)
+
+	var updateQueryBuilder strings.Builder
+	var args []interface{}
+
+	updateQueryBuilder.WriteString("UPDATE comments SET ")
+
+	argIndex := 1
+	if body.Comment != "" {
+		updateQueryBuilder.WriteString("comment = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Comment)
+		argIndex++
+	}
+
+	if body.Grade != 0.0 {
+		updateQueryBuilder.WriteString("grade = $" + strconv.Itoa(argIndex) + ", ")
+		args = append(args, body.Grade)
+		argIndex++
+	}
+
+	updateQueryBuilder.WriteString("updated_at = CURRENT_TIMESTAMP, ")
+	query := strings.TrimSuffix(updateQueryBuilder.String(), ", ")
+	query += " WHERE id = $" + strconv.Itoa(argIndex) + " AND deleted_at IS NULL RETURNING id, comment, grade, created_at, updated_at, deleted_at, user_id, movie_id;"
+	args = append(args, uuid)
+
+	var comment CommentResponse
+	if err := db.QueryRow(query, args...).Scan(&comment.ID, &comment.Comment, &comment.Grade, &comment.CreatedAt, &comment.UpdatedAt, &comment.DeletedAt, &comment.UserId, &comment.MovieId); err != nil {
+		log.Printf("Error updating comment by uuid: %v \n", err)
+		return CommentResponse{}, err
+	}
+
+	return comment, nil
 }

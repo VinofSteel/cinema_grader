@@ -64,7 +64,7 @@ func (com *Comment) CreateComment(c *fiber.Ctx) error {
 		log.Println("Error parsing JSON body:", err)
 		return &fiber.Error{
 			Code:    fiber.StatusInternalServerError,
-			Message: "Unknown error while parsing JSON body, check your request",
+			Message: "Error while parsing JSON body, check your request",
 		}
 	}
 
@@ -221,5 +221,62 @@ func (com *Comment) DeleteComment(c *fiber.Ctx) error {
 	}
 
 	c.Status(fiber.StatusNoContent)
+	return nil
+}
+
+func (com *Comment) UpdateComment(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	_, err = CommentModel.GetCommentById(com.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Comment id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "Comment id not found in database",
+			}
+		}
+
+		log.Println("Error getting comment by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	var commentBody models.CommentEditBody
+	if err := c.BodyParser(&commentBody); err != nil {
+		log.Println("Error parsing JSON body:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Error while parsing JSON body, check your request",
+		}
+	}
+
+	// Validating input data. We return "nil" because the ValidateData function sends a response back by itself and we need to return here to stop the function.
+	if valid := validation.ValidateData(c, com.Validate, commentBody); !valid {
+		return nil
+	}
+
+	commentResponse, err := CommentModel.UpdateCommentsById(com.DB, uuid, commentBody)
+	if err != nil {
+		log.Println("Error updating comment in DB:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	c.Status(fiber.StatusOK).JSON(commentResponse)
 	return nil
 }
