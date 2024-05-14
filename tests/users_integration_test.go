@@ -227,6 +227,7 @@ func TestMain(m *testing.M) {
 	App.Post("/users", userController.CreateUser)
 	App.Get("/users", userController.ListAllUsersInDB)
 	App.Get("/users/:uuid", userController.GetUser)
+	App.Get("/users/:uuid/comments", userController.GetUserComments)
 	App.Delete("/users/:uuid", userController.DeleteUser)
 	App.Patch("/users/:uuid", userController.UpdateUser)
 

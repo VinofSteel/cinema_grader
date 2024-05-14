@@ -286,3 +286,54 @@ func (u *User) UpdateUser(c *fiber.Ctx) error {
 	c.Status(fiber.StatusOK).JSON(userResponse)
 	return nil
 }
+
+func (u *User) GetUserComments(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	uuidParam := c.Params("uuid")
+
+	uuid, err := uuid.Parse(uuidParam)
+	if err != nil {
+		log.Println("Invalid uuid sent in param:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid uuid parameter",
+		}
+	}
+
+	_, err = UserModel.GetUserById(u.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("User id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "User id not found in database",
+			}
+		}
+
+		log.Println("Error getting user by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	userWithCommentsResponse, err := CommentModel.GetAllUserCommentsInDb(u.DB, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("User id not found in database:", err)
+			return &fiber.Error{
+				Code:    fiber.StatusNotFound,
+				Message: "User id not found in database",
+			}
+		}
+
+		log.Println("Error getting user by id:", err)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Unknown error",
+		}
+	}
+
+	c.Status(fiber.StatusOK).JSON(userWithCommentsResponse)
+	return nil
+}

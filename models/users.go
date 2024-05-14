@@ -55,6 +55,11 @@ type UserResponse struct {
 	DeletedAt sql.NullTime `json:"deletedAt"`
 }
 
+type UserResponseWithComments struct {
+	UserResponse
+	Comments []CommentResponse
+}
+
 func (u *UserModel) InsertUserInDB(db *sql.DB, userInfo UserBody) (UserResponse, error) {
 	log.Printf("Inserting user with email %s in DB...\n", userInfo.Email)
 

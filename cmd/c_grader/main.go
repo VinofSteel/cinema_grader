@@ -80,6 +80,7 @@ func main() {
 	app.Post("/users", userController.CreateUser)
 	app.Get("/users", middleware.VerifyAdmin, userController.ListAllUsersInDB)
 	app.Get("/users/:uuid", middleware.VerifyUserOrAdmin, userController.GetUser)
+	app.Get("/users/:uuid/comments", middleware.VerifyUserOrAdmin, userController.GetUserComments)
 	app.Delete("/users/:uuid", middleware.VerifyUserOrAdmin, userController.DeleteUser)
 	app.Patch("/users/:uuid", middleware.VerifyUserOrAdmin, userController.UpdateUser)
 

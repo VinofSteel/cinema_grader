@@ -46,6 +46,8 @@ type CommentResponse struct {
 	MovieId string `json:"movieId"`
 }
 
+var userModel UserModel
+
 // Public methods
 func (c *CommentModel) InsertCommentInDB(db *sql.DB, uuid uuid.UUID, commentInfo CommentBody) (CommentResponse, error) {
 	log.Printf("Inserting comment in DB by user %s...\n", uuid)
@@ -165,4 +167,41 @@ func (c *CommentModel) UpdateCommentsById(db *sql.DB, uuid uuid.UUID, body Comme
 	}
 
 	return comment, nil
+}
+
+func (c *CommentModel) GetAllUserCommentsInDb(db *sql.DB, uuid uuid.UUID) (UserResponseWithComments, error) {
+	user, err := userModel.GetUserById(db, uuid)
+	if err != nil {
+		log.Printf("Error getting user info of user %v from db: %v \n", uuid, err)
+		return UserResponseWithComments{}, err
+	}
+
+	query := `
+		SELECT id, comment, grade, created_at, updated_at, deleted_at, user_id, movie_id
+		FROM comments
+		WHERE user_id = $1 AND deleted_at IS NULL;
+	`
+
+	rows, err := db.Query(query, uuid)
+	if err != nil {
+		log.Printf("Error getting all comments of user %v from db: %v \n", uuid, err)
+		return UserResponseWithComments{}, err
+	}
+	defer rows.Close()
+
+	userWithComments := UserResponseWithComments{
+		UserResponse: user,
+		Comments:     []CommentResponse{},
+	}
+	for rows.Next() {
+		var comment CommentResponse
+		if err := rows.Scan(&comment.ID, &comment.Comment, &comment.Grade, &comment.CreatedAt, &comment.UpdatedAt, &comment.DeletedAt, &comment.UserId, &comment.MovieId); err != nil {
+			log.Printf("Error scanning rows while getting all comments of user %v from db: %v \n", uuid, err)
+			return UserResponseWithComments{}, err
+		}
+		userWithComments.Comments = append(userWithComments.Comments, comment)
+	}
+
+
+	return userWithComments, nil
 }
