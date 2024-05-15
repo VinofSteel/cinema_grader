@@ -4,7 +4,7 @@ Cinema Grader é uma API RESTful feita como forma de treinar a criação de serv
 A API é construída usando a Standard Library de Go, o framework `Fiber` e o banco de dados `PosgreSQL`. Além disso, existem algumas libraries auxiliares para auxiliar com autenticação (`bcrypt`, `jwt`) e outras para configurações e facilitamento do desenvolvimento
 (`godotenv`, `air`).
 
-É uma API que simula uma versão simplificada de uma aplicação como o IMDB, e possui interações com diversos tipos relacionamentos, sendo possível criar usuários, filmes, atores e comentários. Consulte a [documentação](placeholder) para ver todas as rotas e possibilidades da api.
+É uma API que simula uma versão simplificada de uma aplicação como o IMDB, e possui interações com diversos tipos relacionamentos, sendo possível criar usuários, filmes, atores e comentários. Consulte a sessão de documentação para ver todas as rotas e possibilidades da api.
 
 A api possui testes automatizados de integração para todas as rotas e testes unitários onde foi julgado como necessário.
 
@@ -19,5 +19,5 @@ A api possui testes automatizados de integração para todas as rotas e testes u
 
 ## Documentação
 Na pasta `api` na raiz do diretório temos
-1. Um arquivo `c_grader.json` que é um arquivo de configuração do API Client [Insomnium](https://github.com/ArchGPT/insomnium) (que é um fork do Insomnia, mas sem a parte online) que mostra todas as rotas com requisições já prontas para elas e documentação na aba docs.
+1. Um arquivo `c_grader.json` que é um arquivo de configuração do API Client [Insomnium](https://github.com/ArchGPT/insomnium) (que é um fork do Insomnia, mas sem a parte online) que mostra todas as rotas com requisições já prontas para elas. A documentação da api também é feita aqui, e você pode ver como cada rota funciona individualmente abrindo-as na aplicação e olhando a aba `docs`.
 2. O DER (Diagrama de entidades e relações) da nossa database, que demonstra quais as tabelas que existem e a relação entre elas. Foi feita no site [Draw.io](https://app.diagrams.net/) e recomendo abrir a imagem dentro do arquivo para facilitar a leitura, visto que o png tem alguns defeitos de visualização.
