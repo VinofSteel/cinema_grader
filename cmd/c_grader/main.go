@@ -10,6 +10,9 @@ import (
 	"github.com/VinOfSteel/cinemagrader/initializers"
 	"github.com/VinOfSteel/cinemagrader/middleware"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 type GlobalErrorHandlerResp struct {
@@ -44,7 +47,15 @@ func main() {
 			})
 		},
 	}
+
 	app := fiber.New(fiberConfig)
+	app.Use(logger.New(logger.Config{
+		Format: "IP+PORT: ${ip}:${port} | METHOD: ${method} | STATUS: ${status} | PATH: ${path}\n",
+	}))
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*", // This wouldn't be in a real application, just for testing purposes
+	}))
+	app.Use(recover.New())
 
 	// Controllers
 	userController := controllers.User{
