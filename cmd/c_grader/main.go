@@ -97,6 +97,7 @@ func main() {
 	app.Post("/movies/:uuid/actors", middleware.VerifyAdmin, movieController.CreateActorsRelationshipsWithMovie)
 	app.Get("/movies", movieController.ListAllMoviesInDB)
 	app.Get("/movies/:uuid", movieController.GetMovie)
+	app.Get("/movies/:uuid/comments", movieController.GetMovieComments)
 	app.Delete("/movies/:uuid", middleware.VerifyAdmin, movieController.DeleteMovie)
 	app.Delete("/movies/:uuid/actors", middleware.VerifyAdmin, movieController.DeleteActorsRelationshipsWithMovie)
 	app.Patch("/movies/:uuid", middleware.VerifyAdmin, movieController.UpdateMovie)
@@ -108,7 +109,6 @@ func main() {
 	app.Delete("/comments/:uuid", middleware.VerifyUserOrAdmin, commentController.DeleteComment)
 	app.Patch("/comments/:uuid", middleware.VerifyUserOrAdmin, commentController.UpdateComment)
 
-	// @TODO: All comments made by a user
 	// @TODO: All comments in a movie
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))

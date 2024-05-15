@@ -244,6 +244,7 @@ func TestMain(m *testing.M) {
 	App.Post("/movies/:uuid/actors", movieController.CreateActorsRelationshipsWithMovie)
 	App.Get("/movies", movieController.ListAllMoviesInDB)
 	App.Get("/movies/:uuid", movieController.GetMovie)
+	App.Get("/movies/:uuid/comments", movieController.GetMovieComments)
 	App.Delete("/movies/:uuid", movieController.DeleteMovie)
 	App.Delete("/movies/:uuid/actors", movieController.DeleteActorsRelationshipsWithMovie)
 	App.Patch("/movies/:uuid", movieController.UpdateMovie)

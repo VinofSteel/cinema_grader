@@ -79,6 +79,11 @@ type MovieResponseWithActors struct {
 	Actors    []ActorResponse `json:"actors"`
 }
 
+type MovieResponseWithActorsWithComments struct {
+	MovieResponseWithActors
+	Comments []CommentResponse
+}
+
 var actorModel ActorModel
 
 // Internal methods
