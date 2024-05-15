@@ -468,6 +468,30 @@ func (m *Movie) GetMovieComments(c *fiber.Ctx) error {
 		}
 	}
 
+	// Query params
+	orderBy := c.Query("sort", "created,desc")
+	deletedQuery := c.Query("deleted", "false")
+
+	switch strings.ToLower(orderBy) {
+	case "created,asc":
+		orderBy = "created_at ASC"
+	case "created,desc":
+		orderBy = "created_at DESC"
+	case "grade,asc":
+		orderBy = "grade ASC"
+	case "grade,desc":
+		orderBy = "grade DESC"
+	case "updated,asc":
+		orderBy = "updated_at ASC"
+	default:
+		orderBy = "updated_at DESC"
+	}
+
+	var deleted bool
+	if deletedQuery == "true" {
+		deleted = true
+	}
+
 	_, err = MovieModel.GetMovieByIdWithActors(m.DB, uuid)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -485,7 +509,7 @@ func (m *Movie) GetMovieComments(c *fiber.Ctx) error {
 		}
 	}
 
-	movieWithCommentsResponse, err := CommentModel.GetAllCommentsInAMovieInDb(m.DB, uuid)
+	movieWithCommentsResponse, err := CommentModel.GetAllCommentsInAMovieInDb(m.DB, uuid, orderBy, deleted)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Println("Movie id not found in database:", err)

@@ -300,6 +300,30 @@ func (u *User) GetUserComments(c *fiber.Ctx) error {
 		}
 	}
 
+	// Query params
+	orderBy := c.Query("sort", "created,desc")
+	deletedQuery := c.Query("deleted", "false")
+
+	switch strings.ToLower(orderBy) {
+	case "created,asc":
+		orderBy = "created_at ASC"
+	case "created,desc":
+		orderBy = "created_at DESC"
+	case "grade,asc":
+		orderBy = "grade ASC"
+	case "grade,desc":
+		orderBy = "grade DESC"
+	case "updated,asc":
+		orderBy = "updated_at ASC"
+	default:
+		orderBy = "updated_at DESC"
+	}
+
+	var deleted bool
+	if deletedQuery == "true" {
+		deleted = true
+	}
+
 	_, err = UserModel.GetUserById(u.DB, uuid)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -317,7 +341,7 @@ func (u *User) GetUserComments(c *fiber.Ctx) error {
 		}
 	}
 
-	userWithCommentsResponse, err := CommentModel.GetAllUserCommentsInDb(u.DB, uuid)
+	userWithCommentsResponse, err := CommentModel.GetAllUserCommentsInDb(u.DB, uuid, orderBy, deleted)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Println("User id not found in database:", err)

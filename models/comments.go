@@ -170,19 +170,26 @@ func (c *CommentModel) UpdateCommentsById(db *sql.DB, uuid uuid.UUID, body Comme
 	return comment, nil
 }
 
-func (c *CommentModel) GetAllUserCommentsInDb(db *sql.DB, uuid uuid.UUID) (UserResponseWithComments, error) {
+func (c *CommentModel) GetAllUserCommentsInDb(db *sql.DB, uuid uuid.UUID, orderBy string, deleted bool) (UserResponseWithComments, error) {
 	user, err := userModel.GetUserById(db, uuid)
 	if err != nil {
 		log.Printf("Error getting user info of user %v from db: %v \n", uuid, err)
 		return UserResponseWithComments{}, err
 	}
 
-	query := `
-		SELECT id, comment, grade, created_at, updated_at, deleted_at, user_id, movie_id
+	var getCommentsQueryBuilder strings.Builder
+	getCommentsQueryBuilder.WriteString(`SELECT 
+		id, comment, grade, created_at, updated_at, deleted_at, user_id, movie_id
 		FROM comments
-		WHERE user_id = $1 AND deleted_at IS NULL;
-	`
+			WHERE user_id = $1`)
 
+	if !deleted {
+		getCommentsQueryBuilder.WriteString(" AND deleted_at IS NULL")
+	}
+
+	getCommentsQueryBuilder.WriteString(" ORDER BY " + orderBy + ";")
+
+	query := getCommentsQueryBuilder.String()
 	rows, err := db.Query(query, uuid)
 	if err != nil {
 		log.Printf("Error getting all comments of user %v from db: %v \n", uuid, err)
@@ -206,19 +213,26 @@ func (c *CommentModel) GetAllUserCommentsInDb(db *sql.DB, uuid uuid.UUID) (UserR
 	return userWithComments, nil
 }
 
-func (c *CommentModel) GetAllCommentsInAMovieInDb(db *sql.DB, uuid uuid.UUID) (MovieResponseWithActorsWithComments, error) {
+func (c *CommentModel) GetAllCommentsInAMovieInDb(db *sql.DB, uuid uuid.UUID, orderBy string, deleted bool) (MovieResponseWithActorsWithComments, error) {
 	movie, err := movieModel.GetMovieByIdWithActors(db, uuid)
 	if err != nil {
 		log.Printf("Error getting movie info of movie %v from db: %v \n", uuid, err)
 		return MovieResponseWithActorsWithComments{}, err
 	}
 
-	query := `
-		SELECT id, comment, grade, created_at, updated_at, deleted_at, user_id, movie_id
+	var getCommentsQueryBuilder strings.Builder
+	getCommentsQueryBuilder.WriteString(`SELECT 
+		id, comment, grade, created_at, updated_at, deleted_at, user_id, movie_id
 		FROM comments
-		WHERE movie_id = $1 AND deleted_at IS NULL;
-	`
+			WHERE movie_id = $1`)
 
+	if !deleted {
+		getCommentsQueryBuilder.WriteString(" AND deleted_at IS NULL")
+	}
+
+	getCommentsQueryBuilder.WriteString(" ORDER BY " + orderBy + ";")
+
+	query := getCommentsQueryBuilder.String()
 	rows, err := db.Query(query, uuid)
 	if err != nil {
 		log.Printf("Error getting all comments of user %v from db: %v \n", uuid, err)

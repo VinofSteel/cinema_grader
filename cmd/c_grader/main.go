@@ -109,7 +109,5 @@ func main() {
 	app.Delete("/comments/:uuid", middleware.VerifyUserOrAdmin, commentController.DeleteComment)
 	app.Patch("/comments/:uuid", middleware.VerifyUserOrAdmin, commentController.UpdateComment)
 
-	// @TODO: All comments in a movie
-
 	log.Fatal(app.Listen(fmt.Sprintf(":%v", os.Getenv("PORT"))))
 }
