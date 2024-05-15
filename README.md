@@ -15,7 +15,8 @@ A api possui testes automatizados de integração para todas as rotas e testes u
 4. Preencha as variáveis de ambiente conforme o que está comentado no arquivo.
 5. Se você tiver o `make` instalado, pode rodar `make` no terminal que ele vai executar o `Makefile` na raiz do projeto.
 6. Alternativamente, rode o comando `air` em um terminal na raiz do repo. Pronto! Agora o código está rodando e você pode executar suas requisições a vontade.
-7. Essa API possui testes automatizados. Para rodá-los, execute o comando `make test` (ou `go test ./...`) na raiz do projeto, que irá recursivamente consultar todas as pastas do repositório e rodar os testes encontrados. Caso queira rodar alguma pasta específica, é só colocar o caminho dela como argumento ao invés do `./...` (ex: `go test ./tests`). Testes de integração estão na pasta `tests` e os testes unitários estão na mesma pasta que seus arquivos, como dita o paradigma de testes automatizados da linguagem.
+7. Após criar um usuário, acesse o banco de dados usando a própria CLI do Postgres ou o [Dbeaver](https://dbeaver.io/download/) (Também explorando na minha playlist de backend) para rodar uma query SQL que vai convertar a chave `isAdm` para true. A API não tem uma rota para isso propositalmente, por motivos de segurança, e você precisa ser um administrador para acessar todas as rotas.
+8. Essa API possui testes automatizados. Para rodá-los, execute o comando `make test` (ou `go test ./...`) na raiz do projeto, que irá recursivamente consultar todas as pastas do repositório e rodar os testes encontrados. Caso queira rodar alguma pasta específica, é só colocar o caminho dela como argumento ao invés do `./...` (ex: `go test ./tests`). Testes de integração estão na pasta `tests` e os testes unitários estão na mesma pasta que seus arquivos, como dita o paradigma de testes automatizados da linguagem.
 
 ## Documentação
 Na pasta `api` na raiz do diretório temos
