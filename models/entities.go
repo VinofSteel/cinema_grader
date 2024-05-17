@@ -23,6 +23,7 @@ const MoviesTableQuery string = `
 		director VARCHAR(50) NOT NULL,
 		release_date DATE NOT NULL,
 		picture TEXT DEFAULT '',
+		synopsis TEXT DEFAULT '',
 		created_at TIMESTAMP DEFAULT NOW(),
 		updated_at TIMESTAMP DEFAULT NOW(),
 		deleted_at TIMESTAMP,
