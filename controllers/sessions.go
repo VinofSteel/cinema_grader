@@ -134,7 +134,18 @@ func (s *Session) HandleLogin(c *fiber.Ctx) error {
 
 func (s *Session) HandleLogout(c *fiber.Ctx) error {
 	c.Accepts("application/json")
-	c.ClearCookie("Authorization")
+
+	cookie := new(fiber.Cookie)
+	cookie.Name = "Authorization"
+	cookie.Value = ""
+	cookie.Path = "/"
+	cookie.HTTPOnly = true
+	cookie.SameSite = "None"
+	cookie.Secure = false
+	cookie.Expires = time.Now().Add(-1 * time.Hour)
+
+	c.Cookie(cookie)
+
 	c.Status(fiber.StatusNoContent)
 	return nil
 }
