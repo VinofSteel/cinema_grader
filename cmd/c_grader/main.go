@@ -53,7 +53,7 @@ func main() {
 		Format: "IP+PORT: ${ip}:${port} | METHOD: ${method} | STATUS: ${status} | PATH: ${path}\n",
 	}))
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://127.0.0.1:5500/", // This wouldn't be in a real application, just for testing purposes
+		AllowOrigins:     "http://127.0.0.1:5500/",
 		AllowCredentials: true,
 	}))
 	app.Use(recover.New())
