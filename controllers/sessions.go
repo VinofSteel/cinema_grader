@@ -138,11 +138,10 @@ func (s *Session) HandleLogout(c *fiber.Ctx) error {
 	cookie := new(fiber.Cookie)
 	cookie.Name = "Authorization"
 	cookie.Value = ""
+	cookie.Secure = false
 	cookie.HTTPOnly = true
 	cookie.SameSite = "None"
-	cookie.Secure = false
 	cookie.Expires = time.Now().Add(-1 * time.Hour)
-
 	c.Cookie(cookie)
 
 	c.Status(fiber.StatusNoContent)
