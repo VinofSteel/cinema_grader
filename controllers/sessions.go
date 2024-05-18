@@ -122,6 +122,7 @@ func (s *Session) HandleLogin(c *fiber.Ctx) error {
 	cookie.Value = token
 	cookie.Secure = false // We only leave this as false because this API only runs on localhost, for real applications, this would be true.
 	cookie.HTTPOnly = true
+	cookie.SameSite = "None"
 	cookie.Expires = time.Now().Add(time.Hour * 24 * 30)
 	c.Cookie(cookie)
 
