@@ -138,7 +138,6 @@ func (s *Session) HandleLogout(c *fiber.Ctx) error {
 	cookie := new(fiber.Cookie)
 	cookie.Name = "Authorization"
 	cookie.Value = ""
-	cookie.Path = "/"
 	cookie.HTTPOnly = true
 	cookie.SameSite = "None"
 	cookie.Secure = false
