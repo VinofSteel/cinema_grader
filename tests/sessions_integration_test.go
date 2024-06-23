@@ -126,11 +126,11 @@ func Test_SessionsRoutes(t *testing.T) {
 			token, err := jwt.ParseWithClaims(respStruct.Token, claims, func(token *jwt.Token) (interface{}, error) {
 				return []byte(os.Getenv("SECRET_KEY")), nil
 			})
-		
+
 			if err != nil {
 				t.Error("Error parsing token returned in login route:", err)
 			}
-		
+
 			if !token.Valid {
 				t.Error("Token sent to the user in tests is invalid", err)
 			}
