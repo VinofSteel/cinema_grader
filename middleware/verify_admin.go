@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/VinOfSteel/cinemagrader/controllers"
@@ -10,9 +11,25 @@ import (
 
 func VerifyAdmin(c *fiber.Ctx) error {
 	sessionController := controllers.Session{}
-	authCookie := c.Cookies("Authorization")
+	authHeader := c.Get("Authorization")
 
-	claims, err := sessionController.VerifyToken(authCookie)
+    if authHeader == "" {
+        return &fiber.Error{
+            Code:    fiber.StatusUnauthorized,
+            Message: "Missing Authorization header",
+        }
+    }
+
+	parts := strings.Split(authHeader, " ")
+    if len(parts) != 2 || parts[0] != "Bearer" {
+        return &fiber.Error{
+            Code:    fiber.StatusUnauthorized,
+            Message: "Invalid Authorization header format",
+        }
+    }
+    tokenString := parts[1]
+
+	claims, err := sessionController.VerifyToken(tokenString)
 	if err != nil {
 		return &fiber.Error{
 			Code:    fiber.StatusUnauthorized,

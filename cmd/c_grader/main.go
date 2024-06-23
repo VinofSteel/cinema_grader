@@ -86,7 +86,6 @@ func main() {
 
 	// Routes - Session
 	app.Post("/login", sessionController.HandleLogin)
-	app.Post("/logout", sessionController.HandleLogout)
 
 	// Routes - User
 	app.Post("/users", userController.CreateUser)

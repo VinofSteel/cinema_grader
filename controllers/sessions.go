@@ -29,6 +29,7 @@ type LoginBody struct {
 
 type LoginResponse struct {
 	UserID uuid.UUID `json:"userId"`
+	Token string `json:"token"`
 }
 
 func createToken(uuid uuid.UUID, email string, isAdm bool) (string, error) {
@@ -117,33 +118,11 @@ func (s *Session) HandleLogin(c *fiber.Ctx) error {
 		}
 	}
 
-	cookie := new(fiber.Cookie)
-	cookie.Name = "Authorization"
-	cookie.Value = token
-	cookie.Secure = false // We only leave this as false because this API only runs on localhost, for real applications, this would be true.
-	cookie.HTTPOnly = true
-	cookie.SameSite = "None"
-	cookie.Expires = time.Now().Add(time.Hour * 24 * 30)
-	c.Cookie(cookie)
-
-	loginResponse := LoginResponse{UserID: existingUser.ID}
+	loginResponse := LoginResponse{
+		UserID: existingUser.ID,
+		Token: token,
+	}
 	c.Status(fiber.StatusOK).JSON(loginResponse)
 
-	return nil
-}
-
-func (s *Session) HandleLogout(c *fiber.Ctx) error {
-	c.Accepts("application/json")
-
-	cookie := new(fiber.Cookie)
-	cookie.Name = "Authorization"
-	cookie.Value = ""
-	cookie.Secure = false
-	cookie.HTTPOnly = true
-	cookie.SameSite = "None"
-	cookie.Expires = time.Now().Add(-1 * time.Hour)
-	c.Cookie(cookie)
-
-	c.Status(fiber.StatusNoContent)
 	return nil
 }
