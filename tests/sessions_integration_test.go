@@ -6,8 +6,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,6 +21,7 @@ type LoginBody struct {
 
 type LoginResponse struct {
 	UserID uuid.UUID `json:"userId"`
+	Token  string    `json:"token"`
 }
 
 func Test_SessionsRoutes(t *testing.T) {
@@ -72,17 +75,6 @@ func Test_SessionsRoutes(t *testing.T) {
 			},
 			testType: "global-error",
 		},
-		{
-			description: "POST - Logout with an auth cookie - Success Case",
-			route:       "/logout",
-			method:      "POST",
-			data: map[string]interface{}{
-				"email":    "teste1@teste1.com",
-				"password": "testando123@Teste",
-			},
-			expectedCode: 204,
-			testType:     "logout-success",
-		},
 	}
 
 	for _, testCase := range testCases {
@@ -130,21 +122,22 @@ func Test_SessionsRoutes(t *testing.T) {
 				t.Error("Login route must return a valid uuid of the logged in user")
 			}
 
-			cookies := resp.Cookies()
-			assert.Len(t, cookies, 1, "unexpected number of cookies")
-			assert.Equal(t, "Authorization", cookies[0].Name, "unexpected cookie name")
-			assert.NotEqual(t, "", cookies[0].Value, "cookie is empty")
+			claims := jwt.MapClaims{}
+			token, err := jwt.ParseWithClaims(respStruct.Token, claims, func(token *jwt.Token) (interface{}, error) {
+				return []byte(os.Getenv("SECRET_KEY")), nil
+			})
+		
+			if err != nil {
+				t.Error("Error parsing token returned in login route:", err)
+			}
+		
+			if !token.Valid {
+				t.Error("Token sent to the user in tests is invalid", err)
+			}
 		}
 
 		if testCase.testType == "global-error" {
 			assert.Equal(t, testCase.expectedResponse.(GlobalErrorHandlerResp).Message, string(responseBody))
-		}
-
-		if testCase.testType == "logout-success" {
-			cookies := resp.Cookies()
-			assert.Len(t, cookies, 1, "unexpected number of cookies")
-			assert.Equal(t, "Authorization", cookies[0].Name, "unexpected cookie name")
-			assert.Equal(t, "", cookies[0].Value, "authentication cookie value hasn't been cleared")
 		}
 	}
 }

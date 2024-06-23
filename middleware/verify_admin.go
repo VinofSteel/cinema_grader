@@ -13,21 +13,21 @@ func VerifyAdmin(c *fiber.Ctx) error {
 	sessionController := controllers.Session{}
 	authHeader := c.Get("Authorization")
 
-    if authHeader == "" {
-        return &fiber.Error{
-            Code:    fiber.StatusUnauthorized,
-            Message: "Missing Authorization header",
-        }
-    }
+	if authHeader == "" {
+		return &fiber.Error{
+			Code:    fiber.StatusUnauthorized,
+			Message: "Missing Authorization header",
+		}
+	}
 
 	parts := strings.Split(authHeader, " ")
-    if len(parts) != 2 || parts[0] != "Bearer" {
-        return &fiber.Error{
-            Code:    fiber.StatusUnauthorized,
-            Message: "Invalid Authorization header format",
-        }
-    }
-    tokenString := parts[1]
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return &fiber.Error{
+			Code:    fiber.StatusUnauthorized,
+			Message: "Invalid Authorization header format",
+		}
+	}
+	tokenString := parts[1]
 
 	claims, err := sessionController.VerifyToken(tokenString)
 	if err != nil {

@@ -221,7 +221,6 @@ func TestMain(m *testing.M) {
 
 	// Routes - Session
 	App.Post("/login", sessionController.HandleLogin)
-	App.Post("/logout", sessionController.HandleLogout)
 
 	// Routes - User
 	App.Post("/users", userController.CreateUser)

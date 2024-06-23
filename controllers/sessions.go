@@ -29,7 +29,7 @@ type LoginBody struct {
 
 type LoginResponse struct {
 	UserID uuid.UUID `json:"userId"`
-	Token string `json:"token"`
+	Token  string    `json:"token"`
 }
 
 func createToken(uuid uuid.UUID, email string, isAdm bool) (string, error) {
@@ -120,7 +120,7 @@ func (s *Session) HandleLogin(c *fiber.Ctx) error {
 
 	loginResponse := LoginResponse{
 		UserID: existingUser.ID,
-		Token: token,
+		Token:  token,
 	}
 	c.Status(fiber.StatusOK).JSON(loginResponse)
 
